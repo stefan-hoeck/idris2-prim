@@ -80,6 +80,77 @@ namespace EQ
   trans p q = elim (== n) (sym p) q
 
 --------------------------------------------------------------------------------
+--          NEQ
+--------------------------------------------------------------------------------
+
+||| Proof that `m == n` equals `False`
+export
+data (/=) : (m,n : Bits8) -> Type where
+  IsNEQ : (0 prf : (m == n) === False) -> m /= n
+
+||| Constructor for `(/=)`.
+|||
+||| This comes with a `%hint` pragma so values of type
+||| `m /= n` can be derived at compile time if both `m` and `n`
+||| are known.
+export %hint
+0 neq : (m == n) === False -> m /= n
+neq prf = IsNEQ prf
+
+||| Extractor for `(==)`.
+export
+0 runNEQ : m /= n -> (m == n) === False
+runNEQ (IsNEQ prf) = prf
+
+namespace NEQ
+
+  ||| We don't trust arbitrary values of type `m /= n`,
+  ||| so we use this when crafting magical ones.
+  export
+  strict : (0 _ : m /= n) -> Lazy c -> c
+  strict prf = strictRefl (runNEQ prf)
+
+  ||| Decide on `(/=)`.
+  public export
+  decide : (m,n : Bits8) -> Dec0 (m /= n)
+  decide m n = case testNot (m == n) of
+    Yes0 prf   => Yes0 $ IsNEQ prf
+    No0 contra => No0 $ \(IsNEQ prf) => contra prf
+
+  ||| `m == n` implies `Not (m /= n)`.
+  export
+  0 EQ_not_NEQ : m == n -> Not (m /= n)
+  EQ_not_NEQ (IsEQ x) (IsNEQ y) = absurd (trans (sym x) y)
+
+  ||| `m /= n` implies `Not (m == n)`.
+  export
+  0 NEQ_not_EQ : m /= n -> Not (m == n)
+  NEQ_not_EQ = flip EQ_not_NEQ
+
+  ||| `Not (m == n)` implies `m /= n`.
+  export
+  0 Not_EQ_to_NEQ : Not (m == n) -> m /= n
+  Not_EQ_to_NEQ f = IsNEQ $ notTrueImpliesFalse (m == n) (\p => f $ IsEQ p)
+
+  ||| `Not (m /= n)` implies `m == n`.
+  export
+  0 Not_NEQ_to_EQ : Not (m /= n) -> m == n
+  Not_NEQ_to_EQ f = IsEQ $ notFalseImpliesTrue (m == n) (\p => f $ IsNEQ p)
+
+  ||| `(==)` is symmetric.
+  export
+  0 sym : m /= n -> n /= m
+  sym prf = Not_EQ_to_NEQ (NEQ_not_EQ $ sym prf)
+
+  ||| `k == m` and `m /= n` implies `k /= n`.
+  0 trans_EQ_NEQ : k == m -> m /= n -> k /= n
+  trans_EQ_NEQ p q = elim (/= n) (sym p) q
+
+  ||| `k == m` and `m /= n` implies `k /= n`.
+  0 trans_NEQ_EQ : k /= m -> m == n -> k /= n
+  trans_NEQ_EQ p q = elim (k /=) q p
+
+--------------------------------------------------------------------------------
 --          LT
 --------------------------------------------------------------------------------
 
@@ -174,6 +245,16 @@ export
 0 GT_not_EQ : m > n -> Not (m == n)
 GT_not_EQ = flip EQ_not_GT
 
+||| `m < n` implies `m /= n`
+export
+0 LT_to_NEQ : m < n -> m /= n
+LT_to_NEQ = Not_EQ_to_NEQ . LT_not_EQ
+
+||| `m > n` implies `m /= n`
+export
+0 GT_to_NEQ : m > n -> m /= n
+GT_to_NEQ = sym . LT_to_NEQ
+
 --------------------------------------------------------------------------------
 --          LTE
 --------------------------------------------------------------------------------
@@ -258,8 +339,15 @@ public export
 m >= n = n <= m
 
 --------------------------------------------------------------------------------
---          Trichotomy
+--          Di- and Trichotomy
 --------------------------------------------------------------------------------
+
+||| Any pair of values of type Bits8 is related either via `(==)` or `(/=)`.
+export
+dichotomous : (a, b : Bits8) -> Dichotomous (==) (/=) a b
+dichotomous a b = case EQ.decide a b of
+  Yes0 prf   => MkE prf (EQ_not_NEQ prf)
+  No0 contra => MkN contra (Not_EQ_to_NEQ contra)
 
 ||| Any pair of values of type Bits8 is related either via `(<)`, `(==)`, `(>)`
 export
@@ -271,6 +359,14 @@ trichotomous a b = case LT.decide a b of
     No0  _  =>
       let gt = IsLT unsafeRefl
        in MkGT (GT_not_LT gt) (GT_not_EQ gt) gt
+
+||| From `m /= n` follows `m < n` or `m > n`.
+export
+NEQ_to_LT_or_GT : (m,n : Bits8) -> m /= n -> Dichotomous (<) (>) m n
+NEQ_to_LT_or_GT m n x = case trichotomous m n of
+  MkLT y _ g => MkE y g
+  MkGT f _ y => MkN f y
+  MkEQ _ y _ => void (NEQ_not_EQ x y)
 
 --------------------------------------------------------------------------------
 --          Arithmetics
