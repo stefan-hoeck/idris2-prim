@@ -245,6 +245,16 @@ export
 0 GT_not_EQ : m > n -> Not (m == n)
 GT_not_EQ = flip EQ_not_GT
 
+||| `m < n` implies `m /= n`
+export
+0 LT_to_NEQ : m < n -> m /= n
+LT_to_NEQ = Not_EQ_to_NEQ . LT_not_EQ
+
+||| `m > n` implies `m /= n`
+export
+0 GT_to_NEQ : m > n -> m /= n
+GT_to_NEQ = sym . LT_to_NEQ
+
 --------------------------------------------------------------------------------
 --          LTE
 --------------------------------------------------------------------------------
@@ -349,6 +359,14 @@ trichotomous a b = case LT.decide a b of
     No0  _  =>
       let gt = IsLT unsafeRefl
        in MkGT (GT_not_LT gt) (GT_not_EQ gt) gt
+
+||| From `m /= n` follows `m < n` or `m > n`.
+export
+NEQ_to_LT_or_GT : (m,n : Bits8) -> m /= n -> Dichotomous (<) (>) m n
+NEQ_to_LT_or_GT m n x = case trichotomous m n of
+  MkLT y _ g => MkE y g
+  MkGT f _ y => MkN f y
+  MkEQ _ y _ => void (NEQ_not_EQ x y)
 
 --------------------------------------------------------------------------------
 --          Arithmetics

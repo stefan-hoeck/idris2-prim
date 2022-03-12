@@ -148,5 +148,25 @@ Documentation> lit 12 16
 "c"
 ```
 
+```idris
+
+%hint
+0 gt0 : n >= m -> m > 0 -> n > 0
+gt0 geq gt = trans_LT_LTE gt geq
+
+%hint
+0 lt16 : m < n -> n <= 16 -> m < 16
+lt16 = trans_LT_LTE
+
+lit2 : Bits8 -> Base -> String
+lit2 0 _ = "0"
+lit2 x (MkBase b geq2 leq16) = go [] x
+  where go : List Char -> Bits8 -> String
+        go cs 0 = pack cs
+        go cs v =
+          let Element d ltb = smod v b
+           in go (hexChar d :: cs) (assert_smaller v $ sdiv v b)
+```
+
 <!-- vi: filetype=idris2
 -->
