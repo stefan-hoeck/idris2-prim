@@ -52,5 +52,3 @@ jobs:
         uses: actions/checkout@v2
       - name: Build lib
         run: make lib
-      - name: Build docs
-        run: make docs
