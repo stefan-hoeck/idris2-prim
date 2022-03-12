@@ -1,0 +1,8 @@
+package prim-doc
+version    = 0.0.1
+authors    = "Stefan Höck"
+depends    = base      >= 0.5.1
+
+modules    = Documentation
+
+sourcedir  = "src"

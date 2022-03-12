@@ -1,6 +1,7 @@
 module Data.Prim.Bits8
 
 import public Data.Dec0
+import public Data.DPair
 import public Data.Trichotomous
 
 %default total
@@ -25,7 +26,11 @@ data (==) : (m,n : Bits8) -> Type where
   IsEQ : (0 prf : (m == n) === True) -> m == n
 
 ||| Constructor for `(==)`.
-export
+|||
+||| This comes with a `%hint` pragma so values of type
+||| `m == n` can be derived at compile time if both `m` and `n`
+||| are known.
+export %hint
 0 eq : (m == n) === True -> m == n
 eq prf = IsEQ prf
 
@@ -84,7 +89,11 @@ data (<) : (m,n : Bits8) -> Type where
   IsLT : (0 prf : (m < n) === True) -> m < n
 
 ||| Constructor for (<).
-export
+|||
+||| This comes with a `%hint` pragma so values of type
+||| `m < n` can be derived at compile time if both `m` and `n`
+||| are known.
+export %hint
 0 lt : (m < n) === True -> m < n
 lt prf = IsLT prf
 
@@ -262,3 +271,17 @@ trichotomous a b = case LT.decide a b of
     No0  _  =>
       let gt = IsLT unsafeRefl
        in MkGT (GT_not_LT gt) (GT_not_EQ gt) gt
+
+--------------------------------------------------------------------------------
+--          Arithmetics
+--------------------------------------------------------------------------------
+
+||| Safe integer division
+public export
+sdiv : (m,n : Bits8) -> (0 prf : n > 0) => Bits8
+sdiv m n = div m n
+
+||| Safe modulo
+public export
+smod : (m,n : Bits8) -> (0 prf : n > 0) => Subset Bits8 (< n)
+smod m n = Element (m `mod` n) (IsLT unsafeRefl)
