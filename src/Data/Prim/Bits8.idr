@@ -43,7 +43,7 @@ namespace EQ
   strict prf = strictRefl (runEQ prf)
 
   ||| Decide on `(==)`.
-  export
+  public export
   decide : (m,n : Bits8) -> Dec0 (m == n)
   decide m n = case test (m == n) of
     Yes0 prf   => Yes0 $ IsEQ prf
@@ -97,7 +97,7 @@ namespace LT
 
   ||| Decide on `(<)`.
   export
-  decide : (m,n : Bits8) -> Dec0 (m < n)
+  public decide : (m,n : Bits8) -> Dec0 (m < n)
   decide m n = case test (m < n) of
     Yes0 prf   => Yes0 (IsLT prf)
     No0 contra => No0 $ contra . runLT
@@ -193,7 +193,7 @@ namespace LTE
 
   ||| Decide on `(<=)`.
   export
-  decide : (m,n : Bits8) -> Dec0 (m <= n)
+  public decide : (m,n : Bits8) -> Dec0 (m <= n)
   decide m n = case EQ.decide m n of
     Yes0 eq => Yes0 $ MkEQ eq
     No0  c1 => case LT.decide m n of
