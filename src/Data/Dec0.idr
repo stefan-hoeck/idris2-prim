@@ -40,3 +40,19 @@ public export
 test : (b : Bool) -> Dec0 (b === True)
 test True  = Yes0 Refl
 test False = No0 absurd
+
+||| Decidably test if a boolean value is `False`.
+public export
+testNot : (b : Bool) -> Dec0 (b === False)
+testNot False = Yes0 Refl
+testNot True  = No0 absurd
+
+public export
+0 notTrueImpliesFalse : (b : Bool) -> Not (b === True) -> b === False
+notTrueImpliesFalse False f = Refl
+notTrueImpliesFalse True  f = void (f Refl)
+
+public export
+0 notFalseImpliesTrue : (b : Bool) -> Not (b === False) -> b === True
+notFalseImpliesTrue False f = void (f Refl)
+notFalseImpliesTrue True  f = Refl
