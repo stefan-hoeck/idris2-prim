@@ -26,7 +26,6 @@ install-with-src:
 .PHONY: clean
 clean:
 	${IDRIS2} --clean ${lib_pkg}
-	${IDRIS2} --clean ${docs_pkg}
 	${RM} -r build
 
 # Start a REPL in rlwrap
