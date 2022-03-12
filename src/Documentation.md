@@ -19,7 +19,7 @@ division for `Bits8`. In order to do so, we need an
 erased proof that the denominator is strictly positive.
 
 ```idris
-safeDiv : (m,n : Bits8) -> (0 _ : 0 < n) => Bits8
+safeDiv : (m,n : Bits8) -> (0 prf : 0 < n) => Bits8
 safeDiv m n = m `div` n
 ```
 
@@ -76,7 +76,7 @@ positive x = case LT.decide 0 x of
 
 ### Converting Values to Strings
 
-A more interesting case is the modulus operation. It comes
+A more interesting use case is the modulus operation. It comes
 with the guarantees that if the modulus is positive, the
 result will be strictly smaller than the modulus.
 The unsigned integer modules export functions `smod`
