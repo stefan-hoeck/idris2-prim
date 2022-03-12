@@ -7,5 +7,8 @@ primitive types and functions in Idris2. This should make
 it possible for client code to *refine* primitive values
 (for instance, by means of `Data.DPair.Subset`) and have the
 ability to convert between such refined values.
+It also should allow us to safely use primitives in recursive
+functions.
 
-Right now, this is still work in progress.
+There is a small [tutorial](srd/Documentation.md) explaining
+some of the base concepts.
