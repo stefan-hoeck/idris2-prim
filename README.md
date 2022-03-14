@@ -10,5 +10,5 @@ ability to convert between such refined values.
 It also should allow us to safely use primitives in recursive
 functions.
 
-There is a small [tutorial](srd/Documentation.md) explaining
+There is a small [tutorial](src/Documentation.md) explaining
 some of the base concepts.
