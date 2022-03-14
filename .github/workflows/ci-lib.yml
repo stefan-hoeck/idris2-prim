@@ -9,7 +9,6 @@ on:
   pull_request:
     branches:
       - main
-      - master
   schedule:
     # We want to run right after the `latest` image is published.
     # So, let's do it an hour right after. Look the schedule of publishing here:
@@ -75,7 +74,7 @@ jobs:
           if-no-files-found: error
 
   build:
-    name: Build the lib with ${{ matrix.idris-version }}
+    name: Build ${{ github.repository }} with ${{ matrix.idris-version }}
     needs:
       - read-ver
       - dependencies
@@ -90,6 +89,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Download installed dependencies
+        uses: actions/download-artifact@master
+        with:
+          name: dependencies-for-${{ matrix.idris-version }}
+          path: /root/.idris2/
       - name: Build lib
         run: make lib
       - name: Build doc
