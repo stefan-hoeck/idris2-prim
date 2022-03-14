@@ -149,17 +149,18 @@ export
 0 Not_LT_MinBits8 : m < 0 -> Void
 Not_LT_MinBits8 = GTE_not_LT (GTE_MinBits8 m)
 
-||| `m <= 0xff` for all `m` of type `Bits8`.
+||| `m <= MaxBits8` for all `m` of type `Bits8`.
 export
 0 LTE_MaxBits8 : (m : Bits8) -> m <= MaxBits8
 LTE_MaxBits8 m = case comp m MaxBits8 of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total $ idris_crash "IMPOSSIBLE: Bits8 greater than 0xff"
+  GT f g x => assert_total
+            $ idris_crash "IMPOSSIBLE: Bits8 greater than \{show MaxBits8}"
 
-||| Not value of type `Bits8` is greater than 0xff.
+||| Not value of type `Bits8` is greater than `MaxBits8`.
 export
-0 Not_GT_MaxBits8 : m > 0xff -> Void
+0 Not_GT_MaxBits8 : m > MaxBits8 -> Void
 Not_GT_MaxBits8 = LTE_not_GT (LTE_MaxBits8 m)
 
 ||| Every value of type `Bits8` is accessible with relation
