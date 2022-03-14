@@ -36,9 +36,49 @@ jobs:
         id: read-ver
         run: sed 's/^/::set-output name=idris-ver::/' < "${IDRIS_VERSION_FILE}"
 
+  dependencies:
+    name: Install ${{ matrix.lib }} for ${{ matrix.idris-version }}
+    needs: read-ver
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1 # We need sequential run!
+      matrix:
+        lib:
+          - elab-util
+          - sop
+          - pretty-show
+          - hedgehog
+        idris-version:
+          - ${{ needs.read-ver.outputs.idris-ver }}
+          - latest
+    container: snazzybucket/idris2api:${{ matrix.idris-version }}
+    steps:
+      - name: Checkout ${{ matrix.lib }}
+        uses: actions/checkout@v2
+        with:
+          repository: stefan-hoeck/idris2-${{ matrix.lib }}
+      - name: Download already installed dependencies
+        uses: actions/download-artifact@master
+        with:
+          name: dependencies-for-${{ matrix.idris-version }}
+          path: /root/.idris2/
+        continue-on-error: true
+      - name: Make ${{ matrix.lib }}
+        run: make lib
+      - name: Install ${{ matrix.lib }}
+        run: make install
+      - name: Save installed lib
+        uses: actions/upload-artifact@master
+        with:
+          name: dependencies-for-${{ matrix.idris-version }}
+          path: /root/.idris2/idris2-*/${{ matrix.lib }}*
+          if-no-files-found: error
+
   build:
     name: Build the lib with ${{ matrix.idris-version }}
-    needs: read-ver
+    needs:
+      - read-ver
+      - dependencies
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -54,3 +94,5 @@ jobs:
         run: make lib
       - name: Build doc
         run: make doc
+      - name: Build test
+        run: make test

@@ -2,10 +2,12 @@ export IDRIS2 ?= idris2
 
 lib_pkg = prim.ipkg
 
+test_pkg = test.ipkg
+
 doc_pkg = doc.ipkg
 
 .PHONY: all
-all: lib doc
+all: lib doc test
 
 .PHONY: clean-install
 clean-install: clean install
@@ -21,6 +23,10 @@ lib:
 doc:
 	${IDRIS2} --build ${doc_pkg}
 
+.PHONY: test
+test:
+	${IDRIS2} --build ${test_pkg} && build/exec/runTest -n 1000
+
 .PHONY: install
 install:
 	${IDRIS2} --install ${lib_pkg}
@@ -33,6 +39,7 @@ install-with-src:
 clean:
 	${IDRIS2} --clean ${lib_pkg}
 	${IDRIS2} --clean ${doc_pkg}
+	${IDRIS2} --clean ${test_pkg}
 	${RM} -r build
 
 # Start a REPL in rlwrap

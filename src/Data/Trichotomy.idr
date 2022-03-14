@@ -51,3 +51,9 @@ Show (Trichotomy lt eq m n) where
   show (LT _ _ _) = "LT"
   show (EQ _ _ _) = "EQ"
   show (GT _ _ _) = "GT"
+
+public export
+toOrdering : Trichotomy lt eq m n -> Ordering
+toOrdering (LT _ _ _) = LT
+toOrdering (EQ _ _ _) = EQ
+toOrdering (GT _ _ _) = GT
