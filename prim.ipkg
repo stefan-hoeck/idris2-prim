@@ -11,4 +11,7 @@ depends    = base    >= 0.5.1
 modules = Data.Prim
         , Data.Prim.Ord
         , Data.Prim.Bits8
+        , Data.Prim.Bits16
+        , Data.Prim.Bits32
+        , Data.Prim.Bits64
         , Data.Trichotomy
