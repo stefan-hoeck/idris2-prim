@@ -14,4 +14,8 @@ modules = Data.Prim
         , Data.Prim.Bits16
         , Data.Prim.Bits32
         , Data.Prim.Bits64
+        , Data.Prim.Int8
+        , Data.Prim.Int16
+        , Data.Prim.Int32
+        , Data.Prim.Int64
         , Data.Trichotomy

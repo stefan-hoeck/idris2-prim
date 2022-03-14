@@ -1,4 +1,4 @@
-module Data.Prim.Bits32
+module Data.Prim.Int16
 
 import public Control.WellFounded
 import public Data.DPair
@@ -15,8 +15,8 @@ unsafeRefl = believe_me (Refl {x = a})
 
 ||| Witness that `m < n === True`.
 export
-data (<) : (m,n : Bits32) -> Type where
-  LT : {0 m,n : Bits32} -> (0 prf : (m < n) === True) -> m < n
+data (<) : (m,n : Int16) -> Type where
+  LT : {0 m,n : Int16} -> (0 prf : (m < n) === True) -> m < n
 
 ||| Contructor for `(<)`.
 |||
@@ -44,8 +44,8 @@ strictLT (LT prf) x = x
 
 ||| Witness that `m == n === True`.
 export
-data (==) : (m,n : Bits32) -> Type where
-  EQ : {0 m,n : Bits32} -> (0 prf : (m == n) === True) -> m == n
+data (==) : (m,n : Int16) -> Type where
+  EQ : {0 m,n : Int16} -> (0 prf : (m == n) === True) -> m == n
 
 ||| Contructor for `(==)`.
 |||
@@ -73,22 +73,22 @@ strictEQ (EQ prf) x = x
 
 ||| Flipped version of `(<)`.
 public export
-0 (>) : (m,n : Bits32) -> Type
+0 (>) : (m,n : Int16) -> Type
 m > n = n < m
 
 ||| `m <= n` mean that either `m < n` or `m == n` holds.
 public export
-0 (<=) : (m,n : Bits32) -> Type
+0 (<=) : (m,n : Int16) -> Type
 m <= n = Either (m < n) (m == n)
 
 ||| Flipped version of `(<=)`.
 public export
-0 (>=) : (m,n : Bits32) -> Type
+0 (>=) : (m,n : Int16) -> Type
 m >= n = n <= m
 
 ||| `m /= n` mean that either `m < n` or `m > n` holds.
 public export
-0 (/=) : (m,n : Bits32) -> Type
+0 (/=) : (m,n : Int16) -> Type
 m /= n = Either (m < n) (m > n)
 
 --------------------------------------------------------------------------------
@@ -108,15 +108,15 @@ ltNotEQ x = strictLT x $ assert_total (idris_crash "IMPOSSIBLE: LT and EQ")
 ltNotGT x = strictLT x $ assert_total (idris_crash "IMPOSSIBLE: LT and GT")
 
 export
-comp : (m,n : Bits32) -> Trichotomy (<) (==) m n
-comp m n = case prim__lt_Bits32 m n of
-  0 => case prim__eq_Bits32 m n of
+comp : (m,n : Int16) -> Trichotomy (<) (==) m n
+comp m n = case prim__lt_Int16 m n of
+  0 => case prim__eq_Int16 m n of
     0 => GT (ltNotGT $ LT unsafeRefl) (ltNotEQ $ LT unsafeRefl) (LT unsafeRefl)
     x => EQ (eqNotLT $ EQ unsafeRefl) (EQ unsafeRefl) (eqNotGT $ EQ unsafeRefl)
   x => LT (LT unsafeRefl) (ltNotEQ $ LT unsafeRefl) (ltNotGT $ LT unsafeRefl)
 
 export
-PrimOrd Bits32 (<) (==) where
+PrimOrd Int16 (<) (==) where
   trichotomy   = comp
   transLT p q  = strictLT p $ strictLT q $ LT unsafeRefl
   reflEQ       = EQ unsafeRefl
@@ -126,63 +126,64 @@ PrimOrd Bits32 (<) (==) where
 --          Bounds and Well-Foundedness
 --------------------------------------------------------------------------------
 
-||| Lower bound of `Bits32`
+||| Lower bound of `Int16`
 public export
-MinBits32 : Bits32
-MinBits32 = 0
+MinInt16 : Int16
+MinInt16 = -0x8000
 
-||| Upper bound of `Bits32`
+||| Upper bound of `Int16`
 public export
-MaxBits32 : Bits32
-MaxBits32 = 0xffffffff
+MaxInt16 : Int16
+MaxInt16 = 0x7fff
 
-||| `m >= 0` for all `m` of type `Bits32`.
+||| `m >= MinInt16` for all `m` of type `Int16`.
 export
-0 GTE_MinBits32 : (m : Bits32) -> m >= MinBits32
-GTE_MinBits32 m = case comp MinBits32 m of
-  LT x f g => %search
-  EQ f x g => %search
-  GT f g x => assert_total $ idris_crash "IMPOSSIBLE: Bits32 smaller than 0"
-
-||| Not value of type `Bits32` is less than zero.
-export
-0 Not_LT_MinBits32 : m < 0 -> Void
-Not_LT_MinBits32 = GTE_not_LT (GTE_MinBits32 m)
-
-||| `m <= MaxBits32` for all `m` of type `Bits32`.
-export
-0 LTE_MaxBits32 : (m : Bits32) -> m <= MaxBits32
-LTE_MaxBits32 m = case comp m MaxBits32 of
+0 GTE_MinInt16 : (m : Int16) -> m >= MinInt16
+GTE_MinInt16 m = case comp MinInt16 m of
   LT x f g => %search
   EQ f x g => %search
   GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Bits32 greater than \{show MaxBits32}"
+            $ idris_crash "IMPOSSIBLE: Int16 smaller than \{show MinInt16}"
 
-||| Not value of type `Bits32` is greater than `MaxBits32`.
+||| Not value of type `Int16` is less than zero.
 export
-0 Not_GT_MaxBits32 : m > MaxBits32 -> Void
-Not_GT_MaxBits32 = LTE_not_GT (LTE_MaxBits32 m)
+0 Not_LT_MinInt16 : m < MinInt16 -> Void
+Not_LT_MinInt16 = GTE_not_LT (GTE_MinInt16 m)
 
-||| Every value of type `Bits32` is accessible with relation
+||| `m <= MaxInt16` for all `m` of type `Int16`.
+export
+0 LTE_MaxInt16 : (m : Int16) -> m <= MaxInt16
+LTE_MaxInt16 m = case comp m MaxInt16 of
+  LT x f g => %search
+  EQ f x g => %search
+  GT f g x => assert_total
+            $ idris_crash "IMPOSSIBLE: Int16 greater than \{show MaxInt16}"
+
+||| Not value of type `Int16` is greater than `MaxInt16`.
+export
+0 Not_GT_MaxInt16 : m > MaxInt16 -> Void
+Not_GT_MaxInt16 = LTE_not_GT (LTE_MaxInt16 m)
+
+||| Every value of type `Int16` is accessible with relation
 ||| to `(<)`.
 export
-accessLT : (m : Bits32) -> Accessible (<) m
+accessLT : (m : Int16) -> Accessible (<) m
 accessLT m = Access $ \n,lt => accessLT (assert_smaller m n)
 
 ||| `(<)` is well founded.
 export %inline
-WellFounded Bits32 (<) where
+WellFounded Int16 (<) where
   wellFounded = accessLT
 
-||| Every value of type `Bits32` is accessible with relation
+||| Every value of type `Int16` is accessible with relation
 ||| to `(>)`.
 export
-accessGT : (m : Bits32) -> Accessible (>) m
+accessGT : (m : Int16) -> Accessible (>) m
 accessGT m = Access $ \n,gt => accessGT (assert_smaller m n)
 
 ||| `(>)` is well founded.
 export %inline
-[GT] WellFounded Bits32 (>) where
+[GT] WellFounded Int16 (>) where
   wellFounded = accessGT
 
 --------------------------------------------------------------------------------
@@ -190,49 +191,11 @@ export %inline
 --------------------------------------------------------------------------------
 
 ||| Safe division.
-|||
-||| This uses `0 < d` as a constraint instead
-||| of `0 /= d`, because in my experience, the former
-||| is much more useful.
 export %inline
-sdiv : (n,d : Bits32) -> (0 prf : 0 < d) => Bits32
+sdiv : (n,d : Int16) -> (0 prf : d /= 0) => Int16
 sdiv n d = n `div` d
 
-||| Refined division.
-|||
-||| This comes with a proof that the result is
-||| strictly smaller than `n`.
-|||
-||| This uses `0 < n` as a constraint instead
-||| of `0 /= n`, because in my experience, the former
-||| is much more useful.
-export %inline
-rdiv :  (n,d : Bits32)
-     -> (0 dgt1 : 1 < d)
-     => (0 ngt0 : 0 < n)
-     => Subset Bits32 (< n)
-rdiv n d = Element (n `div` d) (LT unsafeRefl)
-
 ||| Safe modulo.
-|||
-||| This uses `0 < d` as a constraint instead
-||| of `0 /= d`, because in my experience, the former
-||| is much more useful.
-|||
-||| If you need the postcondition that the result is strictly
-||| smaller than `d`, use `rmod` instead.
 export %inline
-smod : (n,d : Bits32) -> (0 prf : 0 < d) => Bits32
+smod : (n,d : Int16) -> (0 prf : d /= 0) => Int16
 smod n d = n `mod` d
-
-||| Refined modulo.
-|||
-||| This comes with a proof that the result is strictly smaller
-||| than `d`.
-|||
-||| It uses `0 < d` as a constraint instead
-||| of `0 /= d`, because in my experience, the former
-||| is much more useful.
-export %inline
-rmod : (n,d : Bits32) -> (0 prf : 0 < d) => Subset Bits32 (< d)
-rmod n d = Element (n `mod` d) (LT unsafeRefl)

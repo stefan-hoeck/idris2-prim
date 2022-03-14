@@ -191,7 +191,7 @@ export %inline
 
 ||| Safe division.
 |||
-||| This uses `0 < d` as a contraint instead
+||| This uses `0 < d` as a constraint instead
 ||| of `0 /= d`, because in my experience, the former
 ||| is much more useful.
 export %inline
@@ -203,7 +203,7 @@ sdiv n d = n `div` d
 ||| This comes with a proof that the result is
 ||| strictly smaller than `n`.
 |||
-||| This uses `0 < n` as a contraint instead
+||| This uses `0 < n` as a constraint instead
 ||| of `0 /= n`, because in my experience, the former
 ||| is much more useful.
 export %inline
@@ -215,7 +215,7 @@ rdiv n d = Element (n `div` d) (LT unsafeRefl)
 
 ||| Safe modulo.
 |||
-||| This uses `0 < d` as a contraint instead
+||| This uses `0 < d` as a constraint instead
 ||| of `0 /= d`, because in my experience, the former
 ||| is much more useful.
 |||
@@ -230,7 +230,7 @@ smod n d = n `mod` d
 ||| This comes with a proof that the result is strictly smaller
 ||| than `d`.
 |||
-||| It uses `0 < d` as a contraint instead
+||| It uses `0 < d` as a constraint instead
 ||| of `0 /= d`, because in my experience, the former
 ||| is much more useful.
 export %inline
