@@ -9,7 +9,7 @@ sourcedir  = "src"
 depends    = base    >= 0.5.1
 
 modules = Data.Prim
-        , Data.Prim.Ord
+        , Data.Prim.Char
         , Data.Prim.Bits8
         , Data.Prim.Bits16
         , Data.Prim.Bits32
@@ -18,4 +18,6 @@ modules = Data.Prim
         , Data.Prim.Int16
         , Data.Prim.Int32
         , Data.Prim.Int64
+        , Data.Prim.Ord
+        , Data.Prim.String
         , Data.Trichotomy
