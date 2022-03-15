@@ -1,6 +1,5 @@
 module Data.Prim.String
 
-import public Control.WellFounded
 import public Data.DPair
 import public Data.Prim.Ord
 
@@ -143,14 +142,3 @@ GTE_MinString m = case comp MinString m of
 export
 0 Not_LT_MinString : m < MinString -> Void
 Not_LT_MinString = GTE_not_LT (GTE_MinString m)
-
-||| Every value of type `String` is accessible with relation
-||| to `(<)`.
-export
-accessLT : (m : String) -> Accessible (<) m
-accessLT m = Access $ \n,lt => accessLT (assert_smaller m n)
-
-||| `(<)` is well founded.
-export %inline
-WellFounded String (<) where
-  wellFounded = accessLT
