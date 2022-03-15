@@ -22,8 +22,10 @@ strictRefl Refl x = x
 --------------------------------------------------------------------------------
 
 ||| This interface is a witness that the given primitive type
-||| comes with two relations `lt` and `eq`. For these, we typically
-||| define the following aliases (or name the relations accordingly):
+||| comes with two relations `lt` and `eq`, with `lt` being a
+||| strict total order and `eq` being an equivalence relation.
+||| For these, we typically define the following aliases
+||| (or name the relations accordingly):
 |||
 |||   `m < n`  := lt m n
 |||   `m > n`  := lt n m
