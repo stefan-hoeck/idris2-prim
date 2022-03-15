@@ -6,7 +6,7 @@ imports:
 ```idris
 module Documentation
 
-import Data.Prim
+import Data.Prim.Bits8
 
 %default total
 ```
