@@ -116,7 +116,7 @@ comp m n = case prim__lt_Int32 m n of
   x => LT (LT unsafeRefl) (ltNotEQ $ LT unsafeRefl) (ltNotGT $ LT unsafeRefl)
 
 export
-PrimOrd Int32 (<) (==) where
+Strict Int32 (<) (==) where
   trichotomy   = comp
   transLT p q  = strictLT p $ strictLT q $ LT unsafeRefl
   reflEQ       = EQ unsafeRefl
