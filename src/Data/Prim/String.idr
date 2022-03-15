@@ -136,7 +136,7 @@ export
 GTE_MinString m = case comp MinString m of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total $ idris_crash "IMPOSSIBLE: String smaller than 0"
+  GT f g x => assert_total $ idris_crash #"IMPOSSIBLE: String smaller than """#
 
 ||| Not value of type `String` is less than `MinString`.
 export
