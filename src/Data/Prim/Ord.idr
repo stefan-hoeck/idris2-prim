@@ -22,8 +22,10 @@ strictRefl Refl x = x
 --------------------------------------------------------------------------------
 
 ||| This interface is a witness that the given primitive type
-||| comes with two relations `lt` and `eq`. For these, we typically
-||| define the following aliases (or name the relations accordingly):
+||| comes with two relations `lt` and `eq`, with `lt` being a
+||| strict total order and `eq` being an equivalence relation.
+||| For these, we typically define the following aliases
+||| (or name the relations accordingly):
 |||
 |||   `m < n`  := lt m n
 |||   `m > n`  := lt n m
@@ -49,10 +51,10 @@ strictRefl Refl x = x
 ||| It is in the nature of a primitive that we can't proof these axioms
 ||| in Idris itself. We must therefore assume that they hold on all backends,
 ||| and it is the responsibility of programmers implementing
-||| interface `PrimOrd` to make sure that the axioms actually hold.
+||| interface `Strict` to make sure that the axioms actually hold.
 |||
 ||| A note about type inference: Being parameterized by three types,
-||| type inference for `PrimOrd` is horrible unless we define a
+||| type inference for `Strict` is horrible unless we define a
 ||| (single) determining parameter. I first chose `a` for this,
 ||| but that didn't go too well. Since most of the time we are
 ||| interested in proofs of type `lt` (or related values), using
@@ -60,7 +62,7 @@ strictRefl Refl x = x
 ||| circumstance. Still, be prepared to a times having to be
 ||| explicit about `lt`, if Idris can't figure it out on its own.
 public export
-interface PrimOrd (0 a : Type) (0 lt,eq : a -> a -> Type) | lt where
+interface Strict (0 a : Type) (0 lt,eq : a -> a -> Type) | lt where
   ||| Axiom I: `==` is substitutive.
   elim :  {0 m,n : a}
        -> (0 p : a -> Type)
@@ -88,31 +90,31 @@ swap (Right x) = Left x
 
 ||| `==` implies propositional equality.
 export
-0 reflect : PrimOrd a lt eq => eq m n -> m === n
+0 reflect : Strict a lt eq => eq m n -> m === n
 reflect prf = elim {lt} (m ===) prf Refl
 
 namespace EQ
 
   ||| This is an alias for `reflEQ`.
   export
-  0 refl : PrimOrd a lt eq =>  eq m m
+  0 refl : Strict a lt eq =>  eq m m
   refl = reflEQ {lt}
 
   ||| `==` is symmetric.
   export
-  0 sym : PrimOrd a lt eq => eq m n -> eq n m
+  0 sym : Strict a lt eq => eq m n -> eq n m
   sym prf = elim {lt} (`eq` m) prf (refl {lt})
 
   ||| `==` is transitive.
   export
-  0 trans : PrimOrd a lt eq => eq k m -> eq m n -> eq k n
+  0 trans : Strict a lt eq => eq k m -> eq m n -> eq k n
   trans p q = elim {lt} (`eq` n) (sym {lt} p) q
 
 namespace LT
 
   ||| `<` is irreflexive.
   export
-  0 irrefl : PrimOrd a lt eq => Not (lt m m)
+  0 irrefl : Strict a lt eq => Not (lt m m)
   irrefl x = case trichotomy m m of
     LT y _ f => f y
     EQ f _ _ => f x
@@ -120,7 +122,7 @@ namespace LT
 
   ||| This is an alias for `transLT`
   export
-  0 trans : PrimOrd a lt eq => lt k m -> lt m n -> lt k n
+  0 trans : Strict a lt eq => lt k m -> lt m n -> lt k n
   trans = transLT
 
 --------------------------------------------------------------------------------
@@ -129,7 +131,7 @@ namespace LT
 
 ||| `k == m` and `m /= n` implies `k /= n`.
 export
-0 trans_EQ_NEQ :  PrimOrd a lt eq
+0 trans_EQ_NEQ :  Strict a lt eq
                => eq k m
                -> Either (lt m n) (lt n m)
                -> Either (lt k n) (lt n k)
@@ -138,7 +140,7 @@ trans_EQ_NEQ eqv (Right x) = Right (elim {lt} (lt n) (sym {lt} eqv) x)
 
 ||| `k == m` and `m /= n` implies `k /= n`.
 export
-0 trans_NEQ_EQ :  PrimOrd a lt eq
+0 trans_NEQ_EQ :  Strict a lt eq
                => Either (lt k m) (lt m k)
                -> eq m n
                -> Either (lt k n) (lt n k)
@@ -147,45 +149,45 @@ trans_NEQ_EQ neq eqv = swap $ trans_EQ_NEQ (sym {lt} eqv) (swap neq)
 
 ||| `k < m` and `m == n` implies `k < n`
 export
-0 trans_LT_EQ : PrimOrd a lt eq => lt k m -> eq m n -> lt k n
+0 trans_LT_EQ : Strict a lt eq => lt k m -> eq m n -> lt k n
 trans_LT_EQ p q = elim {lt} (lt k) q p
 
 ||| `k == m` and `m < n` implies `k < n`
 export
-0 trans_EQ_LT : PrimOrd a lt eq => eq k m -> lt m n -> lt k n
+0 trans_EQ_LT : Strict a lt eq => eq k m -> lt m n -> lt k n
 trans_EQ_LT p q = elim {lt} (`lt` n) (sym {lt} p) q
 
 ||| `k <= m` and `m < n` implies `k < n`
 export
-0 trans_LTE_LT : PrimOrd a lt eq => Either (lt k m) (eq k m) -> lt m n -> lt k n
+0 trans_LTE_LT : Strict a lt eq => Either (lt k m) (eq k m) -> lt m n -> lt k n
 trans_LTE_LT (Left x)  y = trans x y
 trans_LTE_LT (Right x) y = trans_EQ_LT x y
 
 ||| `k < m` and `m <= n` implies `k < n`
 export
-0 trans_LT_LTE : PrimOrd a lt eq => lt k m -> Either (lt m n) (eq m n) -> lt k n
+0 trans_LT_LTE : Strict a lt eq => lt k m -> Either (lt m n) (eq m n) -> lt k n
 trans_LT_LTE x (Left y)  = trans x y
 trans_LT_LTE x (Right y) = trans_LT_EQ x y
 
 ||| `k > m` and `m == n` implies `k > n`
 export
-0 trans_GT_EQ : PrimOrd a lt eq => lt m k -> eq m n -> lt n k
+0 trans_GT_EQ : Strict a lt eq => lt m k -> eq m n -> lt n k
 trans_GT_EQ p q = elim {lt} (`lt` k) q p
 
 ||| `k == m` and `m > n` implies `k > n`
 export
-0 trans_EQ_GT : PrimOrd a lt eq => eq k m -> lt n m -> lt n k
+0 trans_EQ_GT : Strict a lt eq => eq k m -> lt n m -> lt n k
 trans_EQ_GT p q = elim {lt} (lt n) (sym {lt} p) q
 
 ||| `k >= m` and `m > n` implies `k > n`
 export
-0 trans_GTE_GT : PrimOrd a lt eq => Either (lt m k) (eq m k) -> lt n m -> lt n k
+0 trans_GTE_GT : Strict a lt eq => Either (lt m k) (eq m k) -> lt n m -> lt n k
 trans_GTE_GT (Left x)  y = trans y x
 trans_GTE_GT (Right x) y = trans_EQ_GT (sym {lt} x) y
 
 ||| `k > m` and `m >= n` implies `k > n`
 export
-0 trans_GT_GTE : PrimOrd a lt eq => lt m k -> Either (lt n m) (eq n m) -> lt n k
+0 trans_GT_GTE : Strict a lt eq => lt m k -> Either (lt n m) (eq n m) -> lt n k
 trans_GT_GTE x (Left y)  = trans y x
 trans_GT_GTE x (Right y) = trans_GT_EQ x (sym {lt} y)
 
@@ -193,12 +195,12 @@ namespace LTE
 
   ||| `<=` is reflexive.
   export
-  0 refl : PrimOrd a lt eq => Either (lt m m) (eq m m)
+  0 refl : Strict a lt eq => Either (lt m m) (eq m m)
   refl = Right (refl {lt})
 
   ||| `<=` is transitive.
   export
-  0 trans :  PrimOrd a lt eq
+  0 trans :  Strict a lt eq
           => Either (lt k m) (eq k m)
           -> Either (lt m n) (eq m n)
           -> Either (lt k n) (eq k n)
@@ -208,7 +210,7 @@ namespace LTE
 
   ||| `<=` is antisymmetric.
   export
-  0 antisym :  PrimOrd a lt eq
+  0 antisym :  Strict a lt eq
             => Either (lt m n) (eq m n)
             -> Either (lt n m) (eq m n)
             -> eq m n
@@ -218,7 +220,7 @@ namespace LTE
 
 ||| `k <= m` and `m == n` implies `k <= n`
 export
-0 trans_LTE_EQ :  PrimOrd a lt eq
+0 trans_LTE_EQ :  Strict a lt eq
                => Either (lt k m) (eq k m)
                -> eq m n
                -> Either (lt k n) (eq k n)
@@ -226,7 +228,7 @@ trans_LTE_EQ lte eq = trans lte (Right eq)
 
 ||| `k == m` and `m <= n` implies `(k <= n)`
 export
-0 trans_EQ_LTE :  PrimOrd a lt eq
+0 trans_EQ_LTE :  Strict a lt eq
                => eq k m
                -> Either (lt m n) (eq m n)
                -> Either (lt k n) (eq k n)
@@ -236,7 +238,7 @@ namespace GTE
 
   ||| `>=` is transitive.
   export
-  0 trans :  PrimOrd a lt eq
+  0 trans :  Strict a lt eq
           => Either (lt m k) (eq m k)
           -> Either (lt n m) (eq n m)
           -> Either (lt n k) (eq n k)
@@ -246,7 +248,7 @@ namespace GTE
 
   ||| `>=` is antisymmetric.
   export
-  0 antisym :  PrimOrd a lt eq
+  0 antisym :  Strict a lt eq
             => Either (lt n m) (eq m n)
             -> Either (lt m n) (eq m n)
             -> eq m n
@@ -256,7 +258,7 @@ namespace GTE
 
 ||| `k >= m` and `m == n` implies `k >= n`
 export
-0 trans_GTE_EQ :  PrimOrd a lt eq
+0 trans_GTE_EQ :  Strict a lt eq
                => Either (lt m k) (eq m k)
                -> eq m n
                -> Either (lt n k) (eq n k)
@@ -264,7 +266,7 @@ trans_GTE_EQ gte eq = trans gte (Right $ sym {lt} eq)
 
 ||| `k == m` and `m <= n` implies `(k <= n)`
 export
-0 trans_EQ_GTE :  PrimOrd a lt eq
+0 trans_EQ_GTE :  Strict a lt eq
                => eq k m
                -> Either (lt n m) (eq n m)
                -> Either (lt n k) (eq n k)
@@ -276,7 +278,7 @@ trans_EQ_GTE eq gte = trans (Right $ sym {lt} eq) gte
 
 ||| `m < n` implies `Not (m > n)`.
 export
-0 LT_not_GT : PrimOrd a lt eq => lt m n -> Not (lt n m)
+0 LT_not_GT : Strict a lt eq => lt m n -> Not (lt n m)
 LT_not_GT isLT isGT = case trichotomy m n of
   LT _ _ g => g isGT
   EQ _ _ g => g isGT
@@ -284,7 +286,7 @@ LT_not_GT isLT isGT = case trichotomy m n of
 
 ||| `m < n` implies `Not (m == n)`.
 export
-0 LT_not_EQ : PrimOrd a lt eq => lt m n -> Not (eq m n)
+0 LT_not_EQ : Strict a lt eq => lt m n -> Not (eq m n)
 LT_not_EQ isLT isEQ = case trichotomy m n of
   LT _ g _ => g isEQ
   EQ f _ _ => f isLT
@@ -292,12 +294,12 @@ LT_not_EQ isLT isEQ = case trichotomy m n of
 
 ||| `m < n` implies `Not (m >= n)`.
 export
-0 LT_not_GTE : PrimOrd a lt eq => lt m n -> Not (Either (lt n m) (eq n m))
+0 LT_not_GTE : Strict a lt eq => lt m n -> Not (Either (lt n m) (eq n m))
 LT_not_GTE l = either (LT_not_GT l) (\e => LT_not_EQ l (sym {lt} e))
 
 ||| `Not (m < n)` implies `m >= n`.
 export
-0 Not_LT_to_GTE : PrimOrd a lt eq => Not (lt m n) -> Either (lt n m) (eq n m)
+0 Not_LT_to_GTE : Strict a lt eq => Not (lt m n) -> Either (lt n m) (eq n m)
 Not_LT_to_GTE f = case trichotomy m n of
   LT x _ _ => void (f x)
   EQ _ x _ => Right (sym {lt} x)
@@ -305,22 +307,22 @@ Not_LT_to_GTE f = case trichotomy m n of
 
 ||| `m == n` implies `Not (m < n)`.
 export
-0 EQ_not_LT : PrimOrd a lt eq => eq m n -> Not (lt m n)
+0 EQ_not_LT : Strict a lt eq => eq m n -> Not (lt m n)
 EQ_not_LT = flip LT_not_EQ
 
 ||| `m == n` implies `Not (m > n)`.
 export
-0 EQ_not_GT : PrimOrd a lt eq => eq m n -> Not (lt n m)
+0 EQ_not_GT : Strict a lt eq => eq m n -> Not (lt n m)
 EQ_not_GT isEQ = EQ_not_LT (sym {lt} isEQ)
 
 ||| `m == n` implies `Not (m /= n)`.
 export
-0 EQ_not_NEQ : PrimOrd a lt eq => eq m n -> Not (Either (lt m n) (lt n m))
+0 EQ_not_NEQ : Strict a lt eq => eq m n -> Not (Either (lt m n) (lt n m))
 EQ_not_NEQ isEQ = either (EQ_not_LT isEQ) (EQ_not_GT isEQ)
 
 ||| `Not (m < n)` implies `m >= n`.
 export
-0 Not_EQ_to_NEQ : PrimOrd a lt eq => Not (eq m n) -> Either (lt m n) (lt n m)
+0 Not_EQ_to_NEQ : Strict a lt eq => Not (eq m n) -> Either (lt m n) (lt n m)
 Not_EQ_to_NEQ f = case trichotomy m n of
   LT x _ _ => Left x
   EQ _ x _ => void (f x)
@@ -328,22 +330,22 @@ Not_EQ_to_NEQ f = case trichotomy m n of
 
 ||| `m > n` implies `Not (m < n)`.
 export
-0 GT_not_LT : PrimOrd a lt eq => lt n m -> Not (lt m n)
+0 GT_not_LT : Strict a lt eq => lt n m -> Not (lt m n)
 GT_not_LT = LT_not_GT
 
 ||| `m > n` implies `Not (m == n)`.
 export
-0 GT_not_EQ : PrimOrd a lt eq => lt n m -> Not (eq m n)
+0 GT_not_EQ : Strict a lt eq => lt n m -> Not (eq m n)
 GT_not_EQ = flip EQ_not_GT
 
 ||| `m > n` implies `Not (m <= n)`.
 export
-0 GT_not_LTE : PrimOrd a lt eq => lt n m -> Not (Either (lt m n) (eq m n))
+0 GT_not_LTE : Strict a lt eq => lt n m -> Not (Either (lt m n) (eq m n))
 GT_not_LTE gt = either (GT_not_LT gt) (GT_not_EQ gt)
 
 ||| `Not (m > n)` implies `m <= n`.
 export
-0 Not_GT_to_LTE : PrimOrd a lt eq => Not (lt n m) -> Either (lt m n) (eq m n)
+0 Not_GT_to_LTE : Strict a lt eq => Not (lt n m) -> Either (lt m n) (eq m n)
 Not_GT_to_LTE f = case trichotomy m n of
   LT x _ _ => Left x
   EQ _ x _ => Right x
@@ -351,12 +353,12 @@ Not_GT_to_LTE f = case trichotomy m n of
 
 ||| `m <= n` implies `Not (m > n)`.
 export
-0 LTE_not_GT : PrimOrd a lt eq => (Either (lt m n) (eq m n)) -> Not (lt n m)
+0 LTE_not_GT : Strict a lt eq => (Either (lt m n) (eq m n)) -> Not (lt n m)
 LTE_not_GT = either LT_not_GT EQ_not_GT
 
 ||| `Not (m <= n)` implies `m > n`.
 export
-0 Not_LTE_to_GT : PrimOrd a lt eq => Not (Either (lt m n) (eq m n)) -> lt n m
+0 Not_LTE_to_GT : Strict a lt eq => Not (Either (lt m n) (eq m n)) -> lt n m
 Not_LTE_to_GT f = case trichotomy m n of
   LT x _ _ => void (f $ Left x)
   EQ _ x _ => void (f $ Right x)
@@ -364,7 +366,7 @@ Not_LTE_to_GT f = case trichotomy m n of
 
 ||| `m <= n` and `m >= n` implies `m == n`.
 export
-0 LTE_and_GTE_to_EQ :  PrimOrd a lt eq
+0 LTE_and_GTE_to_EQ :  Strict a lt eq
                     => Either (lt m n) (eq m n)
                     -> Either (lt n m) (eq n m)
                     -> eq m n
@@ -374,7 +376,7 @@ LTE_and_GTE_to_EQ (Left x)  (Left y)  = void (LT_not_GT x y)
 
 ||| `m <= n` and `m /= n` implies `m < n`.
 export
-0 LTE_and_NEQ_to_LT :  PrimOrd a lt eq
+0 LTE_and_NEQ_to_LT :  Strict a lt eq
                     => Either (lt m n) (eq m n)
                     -> Either (lt m n) (lt n m)
                     -> lt m n
@@ -384,12 +386,12 @@ LTE_and_NEQ_to_LT (Right x) (Right y) = void (EQ_not_GT x y)
 
 ||| `m /= n` implies `Not (m == n)`.
 export
-0 NEQ_not_EQ : PrimOrd a lt eq => Either (lt m n) (lt n m) -> Not (eq m n)
+0 NEQ_not_EQ : Strict a lt eq => Either (lt m n) (lt n m) -> Not (eq m n)
 NEQ_not_EQ = either LT_not_EQ GT_not_EQ
 
 ||| `Not (m /= n)` implies `m == n`.
 export
-0 Not_NEQ_to_EQ : PrimOrd a lt eq => Not (Either (lt m n) (lt n m)) -> eq m n
+0 Not_NEQ_to_EQ : Strict a lt eq => Not (Either (lt m n) (lt n m)) -> eq m n
 Not_NEQ_to_EQ f = case trichotomy m n of
   LT x _ _ => void (f $ Left x)
   EQ _ x _ => x
@@ -397,7 +399,7 @@ Not_NEQ_to_EQ f = case trichotomy m n of
 
 ||| `m /= n` and `m <= n` implies `m < n`.
 export
-0 NEQ_and_LTE_to_LT :  PrimOrd a lt eq
+0 NEQ_and_LTE_to_LT :  Strict a lt eq
                     => Either (lt m n) (lt n m)
                     -> Either (lt m n) (eq m n)
                     -> lt m n
@@ -405,7 +407,7 @@ NEQ_and_LTE_to_LT = flip LTE_and_NEQ_to_LT
 
 ||| `m /= n` and `m <= n` implies `m < n`.
 export
-0 NEQ_and_GTE_to_GT :  PrimOrd a lt eq
+0 NEQ_and_GTE_to_GT :  Strict a lt eq
                     => Either (lt m n) (lt n m)
                     -> Either (lt n m) (eq n m)
                     -> lt n m
@@ -415,12 +417,12 @@ NEQ_and_GTE_to_GT (Left x)  (Right y) = void (GT_not_EQ x y)
 
 ||| `m >= n` implies `Not (m < n)`.
 export
-0 GTE_not_LT : PrimOrd a lt eq => Either (lt n m) (eq n m) -> Not (lt m n)
+0 GTE_not_LT : Strict a lt eq => Either (lt n m) (eq n m) -> Not (lt m n)
 GTE_not_LT = either GT_not_LT EQ_not_GT
 
 ||| `Not (m >= n)` implies `m < n`.
 export
-0 Not_GTE_to_LT : PrimOrd a lt eq => Not (Either (lt n m) (eq n m)) -> lt m n
+0 Not_GTE_to_LT : Strict a lt eq => Not (Either (lt n m) (eq n m)) -> lt m n
 Not_GTE_to_LT f = case trichotomy m n of
   LT x _ _ => x
   EQ _ x _ => void (f $ Right (sym {lt} x))
@@ -428,7 +430,7 @@ Not_GTE_to_LT f = case trichotomy m n of
 
 ||| `m >= n` and `m <= n` implies `m == n`.
 export
-0 GTE_and_LTE_to_EQ :  PrimOrd a lt eq
+0 GTE_and_LTE_to_EQ :  Strict a lt eq
                     => Either (lt n m) (eq n m)
                     -> Either (lt m n) (eq m n)
                     -> eq m n
@@ -436,7 +438,7 @@ GTE_and_LTE_to_EQ = flip LTE_and_GTE_to_EQ
 
 ||| `m >= n` and `m /= n` implies `m > n`.
 export
-0 GTE_and_NEQ_to_GT :  PrimOrd a lt eq
+0 GTE_and_NEQ_to_GT :  Strict a lt eq
                     => Either (lt n m) (eq n m)
                     -> Either (lt m n) (lt n m)
                     -> lt n m

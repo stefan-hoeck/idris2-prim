@@ -6,54 +6,84 @@ imports:
 ```idris
 module Documentation
 
-import Data.Prim.Bits8
+import Data.Prim.Bits64
 
 %default total
 ```
 
+At the moment, the main focus of this library lies on the
+strict total order of most primitive types (with the exception
+of `%World` and `Double`). For every primitive type, two
+relations, `(<)` and `(==)` are defined, with `m < n` being
+a witness that `m` is strictly smaller than `n` and `m == n` being
+a witness that `m` and `n` are equivalent. From these, we
+can define the following aliases:
+
+* `m > n = n < m`
+* `m <= n = Either (m < n) (m == n)`
+* `m >= n = n <= m`
+* `m /= n = Either (m < n) (m > n)`
+
+For these relations we implement interface `Data.Prim.Ord.Strict`,
+which comes with four axioms we assume (but can't proof in Idris) to hold
+for the ordered primitive types:
+
+1. `==` eliminates: From `m == n` follows `p m -> p n` for
+   every predicate `p`. In particular this means, that from
+   `m == n` follows propositional equality (`m === n`).
+2. `==` is reflexive: `m == m` holds for all `m` of the
+   given type.
+3. `<` is transitive: From `k < m` and `m < n` follows `k < n`.
+4. Trichotomy: For all values `m,n` of the given type, exactly
+   one of `m < n`, `m == n`, or `m > n` holds.
+
+Module `Data.Prim.Ord` comes with many corollaries following
+from the axioms listed above. We will use these when manually
+calculating new proofs from existing ones.
+
 ## Use Case 1: Safe Division
 
 As a first example, we want to implement safe integer
-division for `Bits8`. In order to do so, we need an
+division for `Bits64`. In order to do so, we need an
 erased proof that the denominator is strictly positive.
 
 ```idris
-safeDiv : (m,n : Bits8) -> (0 prf : 0 < n) => Bits8
-safeDiv m n = m `div` n
+safeDiv : (n,d : Bits64) -> (0 prf : 0 < d) => Bits64
+safeDiv n d = n `div` d
 ```
 
 We can conveniently invoke `safeDiv` with denominators
 known at compile time:
 
 ```idris
-half : Bits8 -> Bits8
+half : Bits64 -> Bits64
 half n = n `safeDiv` 2
 
-ten : Bits8
+ten : Bits64
 ten = safeDiv 100 10
 ```
 
 If, however, the denominator is only known at runtime,
 we first need to *refine* it. For this, we introduce
-a new type for strictly positive values of type `Bits8`:
+a new type for strictly positive values of type `Bits64`:
 
 ```idris
 0 Positive : Type
-Positive = Subset Bits8 (> 0)
+Positive = Subset Bits64 (> 0)
 ```
 
 It is convenient to be able to use integer literals with
 values of type `Positive`. Although the constructors of `(<)`
 and similar predicates are not publicly exported (for safety
 reasons, see below), we can still use proof search to create
-values of `(<)` automatically if both arguments are known
-at compile time, because function `lt`, which can be used
+values of type `(<)` automatically if both arguments are known
+at compile time, because function `mkLT`, which can be used
 to manually define values of type `(<)`, is annotated with
 a `%hint` pragma.
 
 ```idris
 fromInteger :  (n : Integer)
-            -> (0 prf : cast n > the Bits8 0)
+            -> (0 prf : cast n > the Bits64 0)
             => Positive
 fromInteger n = Element (cast n) prf
 
@@ -61,25 +91,26 @@ twelve : Positive
 twelve = 12
 ```
 
-We can use `LT.decide` to refine values only known at
-runtime. This returns a value of type `Dec0`, which
-is like `Dec` but with erased values wrapped in the
-constructors.
+We can use `trichotomy` (or `Bits64.comp`) to refine
+values only known at runtime. This returns a value of
+type `Trichotomy (<) (==) m n`, which holds erased
+proofs that exactly one of the following holds:
+`m < n`, `m > n`, or `m == n`:
 
 ```idris
-positive : Bits8 -> Maybe Positive
+positive : Bits64 -> Maybe Positive
 positive x = case trichotomy 0 x of
-  LT y f g => Just (Element x y)
-  EQ f y g => Nothing
-  GT f g y => Nothing
+  LT y _ _ => Just (Element x y)
+  EQ _ _ _ => Nothing
+  GT _ _ _ => Nothing
 ```
 
 ## Use Case 2: Converting Values to Strings
 
-A more interesting use case is the modulus operation. It comes
-with the guarantees that if the modulus is positive, the
-result will be strictly smaller than the modulus.
-The unsigned integer modules export functions `smod`
+A more interesting use case is the modulo operation. It comes
+with the postcondition that if the modulus is positive (the
+function's precondition), the result will be strictly smaller
+than the modulus. The unsigned integer modules export functions `rmod`
 encapsulating this behavior.
 
 We will implement a small function for converting an
@@ -89,25 +120,25 @@ bases in the range `[2,16]`:
 ```idris
 record Base where
   constructor MkBase
-  value : Bits8
+  value : Bits64
   0 gt1   : value > 1
-  0 leq16 : value <= 16
+  0 lte16 : value <= 16
 
 namespace Base
   public export
   fromInteger :  (n : Integer)
-              -> (0 gt1   : cast n > the Bits8 1)
-              => (0 leq16 : cast n <= the Bits8 16)
+              -> (0 gt1   : cast n > the Bits64 1)
+              => (0 lte16 : cast n <= the Bits64 16)
               => Base
-  fromInteger n = MkBase (cast n) gt1 leq16
+  fromInteger n = MkBase (cast n) gt1 lte16
 ```
 
-We can convert a digit to a hexadecimal character.
-As a precondition, we require the digit to be strictly smaller
-than sixteen:
+To convert a digit to a hexadecimal character,
+we require the digit to be strictly smaller
+than sixteen as a precondition:
 
 ```idris
-hexChar : (d : Bits8) -> (0 prf : d < 16) => Char
+hexChar : (d : Bits64) -> (0 prf : d < 16) => Char
 hexChar d = case d < 10 of
   True  => cast $ 48 + d
   False => cast $ 87 + d
@@ -122,15 +153,16 @@ be doomed to fail anyway. As a result, the implementation
 is quite verbose.
 
 ```idris
-lit : Bits8 -> Base -> String
+lit : Bits64 -> Base -> String
 lit 0 _ = "0"
-lit x (MkBase b gt1 leq16) = go [] x
-  where go : List Char -> Bits8 -> String
+lit x (MkBase b gt1 lte16) = go [] x
+  where go : List Char -> Bits64 -> String
         go cs 0 = pack cs
         go cs v =
-          let Element d ltb = rmod v b {prf = trans %search gt1}
-              v2            = sdiv v b {prf = trans %search gt1}
-              c             = hexChar d {prf = trans_LT_LTE ltb leq16}
+          let 0 gt0         = the (0 < b) $ trans %search gt1
+              Element d ltb = rmod v b
+              v2            = sdiv v b
+              c             = hexChar d {prf = trans_LT_LTE ltb lte16}
            in go (c :: cs) (assert_smaller v v2)
 ```
 
@@ -138,7 +170,8 @@ Functions `rmod` and `sdiv` each require a proof that `b` is larger than zero.
 We can construct such a proof from the transitivity of `(<)`: We know that
 `b > 1` (value `gt1`), and Idris can figure out on its own that `0 < 1`
 (invocation of `%search`). Passing both arguments to `LT.trans` generates
-the desired proof.
+the desired proof. Since this is used twice (in `rmod` and `sdiv`),
+I bound it to erased local variable `gt0`.
 
 In addition, `rmod` returns a proof stating that its result
 is strictly smaller than the modules. We use this and
@@ -160,30 +193,29 @@ Documentation> lit 12 16
 "c"
 ```
 
-There are several techniques to make writing such code somewhat easier.
+There are several techniques for making such code more concise.
 First, we can be clever when choosing our constraints: In `Base` we
 stored the lower bound as `b > 1` instead of `b >= 2`. We could also
 store additional derived proofs in the `Base` data type. Since they
-have zero quantity, the will be erased and have no effect on the runtime
+have zero quantity, they will be erased and have no effect on the runtime
 behavior of our application.
-
 We can also try to come up with some custom hints local to our source
-files. Here's an example that allows us to get rid of manual proof
+files. Here is an example that allows us to get rid of manual proof
 passing:
 
 ```idris
 %hint
 0 gt0 : n > 1 -> n > 0
-gt0 gt = LT.trans ?foo gt
+gt0 gt = trans (the (0 < 1) %search) gt
 
 %hint
 0 lt16 : m < n -> n <= 16 -> m < 16
 lt16 = trans_LT_LTE
 
-lit2 : Bits8 -> Base -> String
+lit2 : Bits64 -> Base -> String
 lit2 0 _ = "0"
-lit2 x (MkBase b geq2 leq16) = go [] x
-  where go : List Char -> Bits8 -> String
+lit2 x (MkBase b geq2 lte16) = go [] x
+  where go : List Char -> Bits64 -> String
         go cs 0 = pack cs
         go cs v =
           let Element d ltb = rmod v b
@@ -196,10 +228,10 @@ checker. Alas, there is no way getting rid of that one.
 
 ## Use Case 3: Well-founded Recursion
 
-Or is there? What we need is a concept called *well-founded recursion*,
+Or is there? What we need is a thing called *well-founded recursion*,
 based on the concept of [*well-founded relations*](https://en.wikipedia.org/wiki/Well-founded_relation).
 A relation `<` on a set `X` is well founded, if every non-empty subset `S`
-of `X` contains a minimal element with respect to `R`, that is, an element
+of `X` contains a minimal element with respect to `<`, that is, an element
 `m`, so that there is no `s` in `S` with `s < m`.
 
 This can also be stated like so: For every `x` in `X`, any chain
@@ -207,11 +239,11 @@ This can also be stated like so: For every `x` in `X`, any chain
 Otherwise, such a chain would be a non-empty subset of `X` with no
 minimal element.
 
-Data types encapsulating these concepts can be found in module
+A data type encapsulating these concepts can be found in module
 `Control.WellFounded` in the *base* library. There is data type
 `Accessible rel x`, a value of which is a proof that every chain
 of values related via `rel` and starting from `x` will be finite.
-We can constructor such a value using recursion, but we must make
+We can construct a value of this type using recursion, but we must make
 sure to proof to Idris that this recursion eventually comes to
 an end.
 
@@ -225,24 +257,24 @@ recursive function call. All we need to do is pass the current
 value a proof that the next function argument `y` is related
 to `x` via `rel`, that is, `rel y x` does hold.
 
-Here is how to do this for `Bits8` and `(<)`:
+Here is how to do this for `Bits64` and `(<)`:
 
 ```idris
-lit3 : Bits8 -> Base -> String
+lit3 : Bits64 -> Base -> String
 lit3 0 _ = "0"
 lit3 x (MkBase b _ _) = go [] x (accessLT x)
-  where go : List Char -> (n : Bits8) -> (0 _ : Accessible (<) n) -> String
+  where go : List Char -> (n : Bits64) -> (0 _ : Accessible (<) n) -> String
         go cs n (Access rec) = case comp 0 n of
           LT ngt0 _ _ =>
             let Element d  _   = n `rmod` b
                 Element n2 ltn = n `rdiv` b
              in go (hexChar d :: cs) n2 (rec n2 ltn)
           EQ _    _ _   => pack cs
-          GT _    _ lt0 => void (Not_LT_MinBits8 lt0)
+          GT _    _ lt0 => void (Not_LT_MinBits64 lt0)
 ```
 
 Note, how we used `comp` to compare the current value against the
-lower bound (which could be any number of type `Bits8`). This
+lower bound (which could be any number of type `Bits64`). This
 returns a value of type `Trichotomy (<) (==) 0 n`, which encapsulates
 the trichotomy of `<`: Exactly one of the three possibilities
 of `m < n`, `m == n`, and `n < m` holds.
@@ -258,9 +290,52 @@ strictly smaller than than the previous accessibility proofs,
 so the totality checker is satisfied.
 
 Of course, there must be some call to `assert_smaller` hidden
-somewhere: `Bits8` is a primitive after all. Indeed, this was
+somewhere: `Bits64` is a primitive after all. Indeed, this was
 used in the implementation of `accessLT`, which we used to
 create the initial proof of accessibility.
+
+## Implementation Details
+
+Since we are working with primitives, all axioms must be
+assumed to hold on all backends, and all values proofing
+such axioms must be magically crafted using unsafe primitives
+like `believe_me` or `assert_total`. But this means, we have to
+be careful when using such proofs during type checking. It's best
+to explain the problem at hand in the words of @gallais, who
+first came up with a set of laws on the ordering of `Int` in
+the *contrib* library:
+
+> The type `Int` is a primitive type in Idris. The only handle we have on
+> it is provided by built-in functions. This is what we are going to use
+> to define relations on Int values. For instance, we will declare that
+> `a` is strictly less than `b` whenever `a < b` is provably equal to `True`.
+>
+> These built-in functions only reduce on literals. This means we will not
+> be able to rely on their computational behaviour to prove statements in
+> open contexts.
+>
+> For instance, no amount of pattern-matching will help us prove:
+> `LT_not_EQ : LT a b -> Not (EQ a b)`
+>
+> Our solution in this file is to use unsafe primitives to manufacture such
+> proofs. This means we are going to essentially postulate some *conditional*
+> results. We do not want such conditional results to reduce to canonical
+> forms too eagerly.
+>
+> Indeed the statement `GT 0 1 -> EQ 0 1` should be provable because 0 is not
+> greater than 1. But its proof should not reduce to a constant function
+> returning the value `Refl` because it is not true that `0` and `1` can be
+> unified. If the proof were to behave this way, we could, in an absurd context,
+> coerce values from any type to any other and cause segmentation faults.
+>
+> Our solution is to be extremely wary of proofs that are passed to us
+> and to only consider returning a magically-crafted output if we have
+> managed to observe that the input is itself in canonical form i.e. to
+> have evaluation stuck on open terms.
+>
+> This is the purpose of the `strictX : X -> Lazy c -> c` functions defined in
+> this file. They all will be waiting until their first argument is in canonical
+> form before returning their second.
 
 ## Conclusion
 
