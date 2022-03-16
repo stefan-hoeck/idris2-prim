@@ -115,7 +115,7 @@ comp m n = case prim__lt_String m n of
   x => LT (LT unsafeRefl) (ltNotEQ $ LT unsafeRefl) (ltNotGT $ LT unsafeRefl)
 
 export
-PrimOrd String (<) (==) where
+Strict String (<) (==) where
   trichotomy   = comp
   transLT p q  = strictLT p $ strictLT q $ LT unsafeRefl
   reflEQ       = EQ unsafeRefl
