@@ -107,10 +107,10 @@ positive x = case trichotomy 0 x of
 
 ## Use Case 2: Converting Values to Strings
 
-A more interesting use case is the modulus operation. It comes
-with the guarantees that if the modulus is positive, the
-result will be strictly smaller than the modulus.
-The unsigned integer modules export functions `rmod`
+A more interesting use case is the modulo operation. It comes
+with the postcondition that if the modulus is positive (the
+function's precondition), the result will be strictly smaller
+than the modulus. The unsigned integer modules export functions `rmod`
 encapsulating this behavior.
 
 We will implement a small function for converting an
@@ -122,20 +122,20 @@ record Base where
   constructor MkBase
   value : Bits64
   0 gt1   : value > 1
-  0 leq16 : value <= 16
+  0 lte16 : value <= 16
 
 namespace Base
   public export
   fromInteger :  (n : Integer)
               -> (0 gt1   : cast n > the Bits64 1)
-              => (0 leq16 : cast n <= the Bits64 16)
+              => (0 lte16 : cast n <= the Bits64 16)
               => Base
-  fromInteger n = MkBase (cast n) gt1 leq16
+  fromInteger n = MkBase (cast n) gt1 lte16
 ```
 
-We can convert a digit to a hexadecimal character.
-As a precondition, we require the digit to be strictly smaller
-than sixteen:
+To convert a digit to a hexadecimal character,
+we require the digit to be strictly smaller
+than sixteen as a precondition:
 
 ```idris
 hexChar : (d : Bits64) -> (0 prf : d < 16) => Char
@@ -155,13 +155,14 @@ is quite verbose.
 ```idris
 lit : Bits64 -> Base -> String
 lit 0 _ = "0"
-lit x (MkBase b gt1 leq16) = go [] x
+lit x (MkBase b gt1 lte16) = go [] x
   where go : List Char -> Bits64 -> String
         go cs 0 = pack cs
         go cs v =
-          let Element d ltb = rmod v b {prf = trans %search gt1}
-              v2            = sdiv v b {prf = trans %search gt1}
-              c             = hexChar d {prf = trans_LT_LTE ltb leq16}
+          let 0 gt0         = the (0 < b) $ trans %search gt1
+              Element d ltb = rmod v b
+              v2            = sdiv v b
+              c             = hexChar d {prf = trans_LT_LTE ltb lte16}
            in go (c :: cs) (assert_smaller v v2)
 ```
 
@@ -169,7 +170,8 @@ Functions `rmod` and `sdiv` each require a proof that `b` is larger than zero.
 We can construct such a proof from the transitivity of `(<)`: We know that
 `b > 1` (value `gt1`), and Idris can figure out on its own that `0 < 1`
 (invocation of `%search`). Passing both arguments to `LT.trans` generates
-the desired proof.
+the desired proof. Since this is used twice (in `rmod` and `sdiv`),
+I bound it to erased local variable `gt0`.
 
 In addition, `rmod` returns a proof stating that its result
 is strictly smaller than the modules. We use this and
@@ -191,13 +193,12 @@ Documentation> lit 12 16
 "c"
 ```
 
-There are several techniques to make writing such code somewhat easier.
+There are several techniques for making such code more concise.
 First, we can be clever when choosing our constraints: In `Base` we
 stored the lower bound as `b > 1` instead of `b >= 2`. We could also
 store additional derived proofs in the `Base` data type. Since they
 have zero quantity, they will be erased and have no effect on the runtime
 behavior of our application.
-
 We can also try to come up with some custom hints local to our source
 files. Here is an example that allows us to get rid of manual proof
 passing:
@@ -213,7 +214,7 @@ lt16 = trans_LT_LTE
 
 lit2 : Bits64 -> Base -> String
 lit2 0 _ = "0"
-lit2 x (MkBase b geq2 leq16) = go [] x
+lit2 x (MkBase b geq2 lte16) = go [] x
   where go : List Char -> Bits64 -> String
         go cs 0 = pack cs
         go cs v =
