@@ -105,6 +105,7 @@ solvePlusRight prf =
     ~~ (k + m) - m  ...(plusMinusAssociative k m m)
     ~~ n - m        ...(cong (\x => x - m) prf)
 
+||| Addition from the left is injective.
 export
 plusLeftInjective : RingLaws a => {0 k,m,n : a} -> k + n === m + n -> k === m
 plusLeftInjective prf =
@@ -114,6 +115,17 @@ plusLeftInjective prf =
     ~~ m + (n - n) ...(sym $ plusMinusAssociative m n n)
     ~~ m + 0       ...(cong (m +) $ minusSelfZero n)
     ~~ m           ...(plusZeroRightNeutral m)
+
+||| Addition from the right is injective.
+export
+plusRightInjective : RingLaws a => {0 k,m,n : a} -> n + k === n + m -> k === m
+plusRightInjective prf =
+  plusLeftInjective $
+    Calc $
+      |~ k + n
+      ~~ n + k  ...(plusCommutative k n)
+      ~~ n + m  ...(prf)
+      ~~ m + n  ...(plusCommutative n m)
 
 --------------------------------------------------------------------------------
 --          Implementations
