@@ -2,6 +2,8 @@ module Data.Prim.Ring
 
 import Data.Prim.Util
 
+%default total
+
 ||| This interface is a witness that for a (primitive)
 ||| integral type `a` the axioms of a commutative ring hold:
 |||
@@ -51,7 +53,7 @@ interface Neg a => RingLaws a where
   minusIsPlusNegate : (0 m,n : a) -> m - n === m + negate n
 
 --------------------------------------------------------------------------------
---          Proofs on (+)
+--          Proofs on Addition
 --------------------------------------------------------------------------------
 
 ||| `n + 0 === n` for all `n : a`.
@@ -81,6 +83,7 @@ minusSelfZero n =
     ~~ n + negate n ...(minusIsPlusNegate n n)
     ~~ 0            ...(plusNegateRightZero n)
 
+||| Law of associativity for subtraction.
 export
 plusMinusAssociative :  RingLaws a
                      => (0 k,m,n : a)
@@ -92,6 +95,7 @@ plusMinusAssociative k m n =
     ~~ (k + m) + negate n ...(plusAssociative k m (negate n))
     ~~ (k + m) - n        ...(sym $ minusIsPlusNegate (k + m) n)
 
+||| We can solve equations involving addition.
 export
 solvePlusRight :  RingLaws a
                => {0 k,m,n : a}
@@ -126,6 +130,121 @@ plusRightInjective prf =
       ~~ n + k  ...(plusCommutative k n)
       ~~ n + m  ...(prf)
       ~~ m + n  ...(plusCommutative n m)
+
+||| From `m + n === 0` follows that `n` is the
+||| additive inverse of `m`.
+export
+solvePlusRightZero :  RingLaws a
+                   => {0 m,n : a}
+                   -> m + n === 0
+                   -> n === negate m
+solvePlusRightZero prf =
+  plusRightInjective (trans prf (sym $ plusNegateRightZero m))
+
+||| From `m + n === 0` follows that `m` is the
+||| additive inverse of `n`.
+export
+solvePlusLeftZero :  RingLaws a
+                  => {0 m,n : a}
+                  -> m + n === 0
+                  -> m === negate n
+solvePlusLeftZero prf =
+  solvePlusRightZero $
+    Calc $
+      |~ n + m
+      ~~ m + n ...(plusCommutative n m)
+      ~~ 0     ...(prf)
+
+||| From `n + n === 0` follows `n === 0`.
+export
+solvePlusSelfZero :  RingLaws a => {0 n : a} -> n + n === n -> n === 0
+solvePlusSelfZero prf =
+    Calc $
+      |~ n
+      ~~ n - n ...(solvePlusRight prf)
+      ~~ 0     ...(minusSelfZero n)
+
+export
+negateDistributes :  RingLaws a
+                  => {0 m,n : a}
+                  -> negate (m + n) === negate m + negate n
+negateDistributes =
+  let 0 k = negate m + negate n
+   in sym $ solvePlusLeftZero $ Calc $
+      |~ (negate m + negate n) + (m + n)
+      ~~ (negate m + negate n) + (n + m)  ...(cong ((negate m + negate n) +)
+                                             $ plusCommutative m n)
+      ~~ ((negate m + negate n) + n) + m  ...(?foo)
+      ~~ 0                                ...(?prf)
+
+--------------------------------------------------------------------------------
+--          Proofs on Multiplication
+--------------------------------------------------------------------------------
+
+||| `n * 1 === n` for all `n : a`.
+export
+multOneRightNeutral : RingLaws a => (0 n : a) -> n * 1 === n
+multOneRightNeutral n =
+  Calc $
+    |~ n * 1
+    ~~ 1 * n ...(multCommutative n 1)
+    ~~ n     ...(multOneLeftNeutral n)
+
+||| Zero is an absorbing element of multiplication.
+export
+multZeroRightAbsorbs : RingLaws a => (0 n : a) -> n * 0 === 0
+multZeroRightAbsorbs n =
+  solvePlusSelfZero $ Calc $
+    |~ (n * 0) + (n * 0)
+    ~~ n * (0 + 0)       ...(sym $ leftDistributive n 0 0)
+    ~~ n * 0             ...(cong (n *) $ plusZeroLeftNeutral 0)
+
+||| Zero is an absorbing element of multiplication.
+export
+multZeroLeftAbsorbs : RingLaws a => (0 n : a) -> 0 * n === 0
+multZeroLeftAbsorbs n =
+  Calc $
+    |~ 0 * n
+    ~~ n * 0 ...(multCommutative 0 n)
+    ~~ 0     ...(multZeroRightAbsorbs n)
+
+||| `m * (-n) = - (m * n)`.
+export
+multNegateRightNegates : RingLaws a => (0 m,n : a) -> m * negate n === negate (m * n)
+multNegateRightNegates m n =
+  solvePlusRightZero $ Calc $
+     |~ m * n + m * negate n
+     ~~ m * (n + negate n)       ...(sym $ leftDistributive m n (negate n))
+     ~~ m * 0                    ...(cong (m *) $ plusNegateRightZero n)
+     ~~ 0                        ...(multZeroRightAbsorbs m)
+
+||| `(- m) * n = - (m * n)`.
+export
+multNegateLeftNegates : RingLaws a => (0 m,n : a) -> negate m * n === negate (m * n)
+multNegateLeftNegates m n =
+  Calc $
+    |~ negate m * n
+    ~~ n * negate m   ...(multCommutative (negate m) n)
+    ~~ negate (n * m) ...(multNegateRightNegates n m)
+    ~~ negate (m * n) ...(cong negate $ multCommutative n m)
+
+||| Multiplication with `(-1)` is negation.
+export
+multMinusOneRightNegates : RingLaws a => (0 n : a) -> n * negate 1 === negate n
+multMinusOneRightNegates n =
+  Calc $
+    |~ n * negate 1
+    ~~ negate (n * 1) ...(multNegateRightNegates n 1)
+    ~~ negate n       ...(cong negate $ multOneRightNeutral n)
+
+||| Multiplication with `(-1)` is negation.
+export
+multMinusOneLeftNegates : RingLaws a => (0 n : a) -> negate 1 * n === negate n
+multMinusOneLeftNegates n =
+  Calc $
+    |~ negate 1 * n
+    ~~ negate (1 * n) ...(multNegateLeftNegates 1 n)
+    ~~ negate n       ...(cong negate $ multOneLeftNeutral n)
 
 --------------------------------------------------------------------------------
 --          Implementations
