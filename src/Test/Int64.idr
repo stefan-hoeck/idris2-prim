@@ -3,6 +3,7 @@ module Test.Int64
 import Data.Prim.Int64
 import Data.SOP
 import Hedgehog
+import Test.RingLaws
 
 allInt64 : Gen Int64
 allInt64 = int64 (linear (-0x8000000000000000) 0xffffffffffffffff)
@@ -24,8 +25,8 @@ prop_comp = property $ do
 
 export
 props : Group
-props = MkGroup "Int64"
+props = MkGroup "Int64" $
   [ ("prop_ltMax",  prop_ltMax)
   , ("prop_ltMin",  prop_ltMin)
   , ("prop_comp",   prop_comp)
-  ]
+  ] ++ ringProps allInt64

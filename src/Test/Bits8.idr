@@ -3,6 +3,7 @@ module Test.Bits8
 import Data.Prim.Bits8
 import Data.SOP
 import Hedgehog
+import Test.RingLaws
 
 allBits8 : Gen Bits8
 allBits8 = bits8 (linear 0 0xffff)
@@ -47,11 +48,11 @@ prop_divMod = property $ do
 
 export
 props : Group
-props = MkGroup "Bits8"
+props = MkGroup "Bits8" $
   [ ("prop_ltMax",  prop_ltMax)
   , ("prop_ltMin",  prop_ltMin)
   , ("prop_comp",   prop_comp)
   , ("prop_mod",    prop_mod)
   , ("prop_div",    prop_div)
   , ("prop_divMod", prop_divMod)
-  ]
+  ] ++ ringProps allBits8

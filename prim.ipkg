@@ -19,5 +19,6 @@ modules = Data.Prim
         , Data.Prim.Int32
         , Data.Prim.Int64
         , Data.Prim.Ord
+        , Data.Prim.Ring
         , Data.Prim.String
         , Data.Trichotomy

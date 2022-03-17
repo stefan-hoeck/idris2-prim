@@ -3,6 +3,7 @@ module Test.Int16
 import Data.Prim.Int16
 import Data.SOP
 import Hedgehog
+import Test.RingLaws
 
 allInt16 : Gen Int16
 allInt16 = int16 (linear (-0x8000) 0xffff)
@@ -24,8 +25,8 @@ prop_comp = property $ do
 
 export
 props : Group
-props = MkGroup "Int16"
+props = MkGroup "Int16" $
   [ ("prop_ltMax",  prop_ltMax)
   , ("prop_ltMin",  prop_ltMin)
   , ("prop_comp",   prop_comp)
-  ]
+  ] ++ ringProps allInt16
