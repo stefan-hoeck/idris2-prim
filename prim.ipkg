@@ -18,6 +18,8 @@ modules = Data.Prim
         , Data.Prim.Int16
         , Data.Prim.Int32
         , Data.Prim.Int64
+        , Data.Prim.Int
+        , Data.Prim.Integer
         , Data.Prim.Ord
         , Data.Prim.Ring
         , Data.Prim.String
