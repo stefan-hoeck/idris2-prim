@@ -1,0 +1,40 @@
+
+||| This is a verbatim copy of the `Syntax.PreorderReasoning`
+||| module in the *contrib* library. I included this here because
+||| depending on *contrib* seems to be overkill, especially because
+||| *contrib* is in the process of being split into smaller modules.
+module Data.Prim.Util
+
+infixl 0  ~~
+prefix 1  |~
+infix  1  ...
+
+|||Slightly nicer syntax for justifying equations:
+|||```
+||| |~ a
+||| ~~ b ...( justification )
+|||```
+|||and we can think of the `...( justification )` as ASCII art for a thought bubble.
+public export
+data Step : a -> b -> Type where
+  (...) : (0 y : a) -> (0 step : x ~=~ y) -> Step x y
+
+public export
+data FastDerivation : (x : a) -> (y : b) -> Type where
+  (|~) : (0 x : a) -> FastDerivation x x
+  (~~) : FastDerivation x y -> (step : Step y z) -> FastDerivation x z
+
+public export
+Calc : {0 x : a} -> {0 y : b} -> FastDerivation x y -> x ~=~ y
+Calc (|~ x) = Refl
+Calc ((~~) der (_ ...(Refl))) = Calc der
+
+{- -- requires import Data.Nat
+0
+example : (x : Nat) -> (x + 1) + 0 = 1 + x
+example x =
+  Calc $
+   |~ (x + 1) + 0
+   ~~ x+1  ...( plusZeroRightNeutral $ x + 1 )
+   ~~ 1+x  ...( plusCommutative x 1          )
+-}

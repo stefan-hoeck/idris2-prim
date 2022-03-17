@@ -3,6 +3,7 @@ module Test.Int32
 import Data.Prim.Int32
 import Data.SOP
 import Hedgehog
+import Test.RingLaws
 
 allInt32 : Gen Int32
 allInt32 = int32 (linear (-0x80000000) 0xffffffff)
@@ -24,8 +25,8 @@ prop_comp = property $ do
 
 export
 props : Group
-props = MkGroup "Int32"
+props = MkGroup "Int32" $
   [ ("prop_ltMax",  prop_ltMax)
   , ("prop_ltMin",  prop_ltMin)
   , ("prop_comp",   prop_comp)
-  ]
+  ] ++ ringProps allInt32

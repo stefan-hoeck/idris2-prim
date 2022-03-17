@@ -3,6 +3,7 @@ module Test.Int8
 import Data.Prim.Int8
 import Data.SOP
 import Hedgehog
+import Test.RingLaws
 
 allInt8 : Gen Int8
 allInt8 = int8 (linear (-0x80) 0xff)
@@ -24,8 +25,8 @@ prop_comp = property $ do
 
 export
 props : Group
-props = MkGroup "Int8"
+props = MkGroup "Int8" $
   [ ("prop_ltMax",  prop_ltMax)
   , ("prop_ltMin",  prop_ltMin)
   , ("prop_comp",   prop_comp)
-  ]
+  ] ++ ringProps allInt8
