@@ -9,6 +9,8 @@ import Test.Int8
 import Test.Int16
 import Test.Int32
 import Test.Int64
+import Test.Int
+import Test.Integer
 import Test.String
 import Hedgehog
 
@@ -23,5 +25,7 @@ main = test
   , Int16.props
   , Int32.props
   , Int64.props
+  , Int.props
+  , Integer.props
   , String.props
   ]
