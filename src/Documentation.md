@@ -13,29 +13,23 @@ import Data.Prim.Bits64
 
 At the moment, the main focus of this library lies on the
 strict total order of most primitive types (with the exception
-of `%World` and `Double`). For every primitive type, two
-relations, `(<)` and `(==)` are defined, with `m < n` being
-a witness that `m` is strictly smaller than `n` and `m == n` being
-a witness that `m` and `n` are equivalent. From these, we
+of `%World` and `Double`). For every primitive type, a
+relation `(<)` is defined, with `m < n` being
+a witness that `m` is strictly smaller than `n`. From this, we
 can define the following aliases:
 
 * `m > n = n < m`
-* `m <= n = Either (m < n) (m == n)`
+* `m <= n = Either (m < n) (m === n)`
 * `m >= n = n <= m`
 * `m /= n = Either (m < n) (m > n)`
 
 For these relations we implement interface `Data.Prim.Ord.Strict`,
-which comes with four axioms we assume (but can't proof in Idris) to hold
+which comes with two axioms we assume (but can't proof in Idris) to hold
 for the ordered primitive types:
 
-1. `==` eliminates: From `m == n` follows `p m -> p n` for
-   every predicate `p`. In particular this means, that from
-   `m == n` follows propositional equality (`m === n`).
-2. `==` is reflexive: `m == m` holds for all `m` of the
-   given type.
-3. `<` is transitive: From `k < m` and `m < n` follows `k < n`.
-4. Trichotomy: For all values `m,n` of the given type, exactly
-   one of `m < n`, `m == n`, or `m > n` holds.
+1. `<` is transitive: From `k < m` and `m < n` follows `k < n`.
+2. Trichotomy: For all values `m,n` of the given type, exactly
+   one of `m < n`, `m === n`, or `m > n` holds.
 
 Module `Data.Prim.Ord` comes with many corollaries following
 from the axioms listed above. We will use these when manually
@@ -93,9 +87,9 @@ twelve = 12
 
 We can use `trichotomy` (or `Bits64.comp`) to refine
 values only known at runtime. This returns a value of
-type `Trichotomy (<) (==) m n`, which holds erased
+type `Trichotomy (<) m n`, which holds erased
 proofs that exactly one of the following holds:
-`m < n`, `m > n`, or `m == n`:
+`m < n`, `m > n`, or `m === n`:
 
 ```idris
 positive : Bits64 -> Maybe Positive
@@ -275,9 +269,9 @@ lit3 x (MkBase b _ _) = go [] x (accessLT x)
 
 Note, how we used `comp` to compare the current value against the
 lower bound (which could be any number of type `Bits64`). This
-returns a value of type `Trichotomy (<) (==) 0 n`, which encapsulates
+returns a value of type `Trichotomy (<) 0 n`, which encapsulates
 the trichotomy of `<`: Exactly one of the three possibilities
-of `m < n`, `m == n`, and `n < m` holds.
+of `m < n`, `m === n`, and `n < m` holds.
 
 Function `rdiv` can be used if `n` is provably greater
 than zero (witnessed by value `ngt0`) and `b` is strictly
