@@ -23,4 +23,5 @@ modules = Data.Prim
         , Data.Prim.Ord
         , Data.Prim.Ring
         , Data.Prim.String
+        , Data.Prim.Util
         , Data.Trichotomy
