@@ -13,14 +13,13 @@ import Data.Prim.Bits64
 
 At the moment, the main focus of this library lies on the
 strict total order of most primitive types (with the exception
-of `%World` and `Double`). For every primitive type, two
-relations, `(<)` and `(==)` are defined, with `m < n` being
-a witness that `m` is strictly smaller than `n` and `m == n` being
-a witness that `m` and `n` are equivalent. From these, we
+of `%World` and `Double`). For every primitive type, a
+relation `(<)` is defined, with `m < n` being
+a witness that `m` is strictly smaller than `n`. From this, we
 can define the following aliases:
 
 * `m > n = n < m`
-* `m <= n = Either (m < n) (m == n)`
+* `m <= n = Either (m < n) (m === n)`
 * `m >= n = n <= m`
 * `m /= n = Either (m < n) (m > n)`
 
@@ -28,14 +27,9 @@ For these relations we implement interface `Data.Prim.Ord.Strict`,
 which comes with four axioms we assume (but can't proof in Idris) to hold
 for the ordered primitive types:
 
-1. `==` eliminates: From `m == n` follows `p m -> p n` for
-   every predicate `p`. In particular this means, that from
-   `m == n` follows propositional equality (`m === n`).
-2. `==` is reflexive: `m == m` holds for all `m` of the
-   given type.
-3. `<` is transitive: From `k < m` and `m < n` follows `k < n`.
-4. Trichotomy: For all values `m,n` of the given type, exactly
-   one of `m < n`, `m == n`, or `m > n` holds.
+1. `<` is transitive: From `k < m` and `m < n` follows `k < n`.
+2. Trichotomy: For all values `m,n` of the given type, exactly
+   one of `m < n`, `m === n`, or `m > n` holds.
 
 Module `Data.Prim.Ord` comes with many corollaries following
 from the axioms listed above. We will use these when manually
