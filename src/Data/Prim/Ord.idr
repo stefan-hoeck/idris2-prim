@@ -93,6 +93,21 @@ export
 0 reflect : Strict a lt eq => eq m n -> m === n
 reflect prf = elim {lt} (m ===) prf Refl
 
+||| Propositional equality implies `==`.
+export
+0 eqFromRefl : Strict a lt eq => m === n -> eq m n
+eqFromRefl prf = replace {p = eq m} prf (reflEQ {lt})
+
+||| Propositional equality implies `<=`.
+export
+0 lteFromRefl : Strict a lt eq => m === n -> Either (lt m n) (eq m n)
+lteFromRefl prf = Right $ eqFromRefl {lt} prf
+
+||| Propositional equality implies `>=`.
+export
+0 gteFromRefl : Strict a lt eq => m === n -> Either (lt n m) (eq n m)
+gteFromRefl prf = Right $ eqFromRefl {lt} (sym prf)
+
 namespace EQ
 
   ||| This is an alias for `reflEQ`.
