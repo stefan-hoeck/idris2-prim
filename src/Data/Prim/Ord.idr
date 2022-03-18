@@ -95,18 +95,18 @@ reflect prf = elim {lt} (m ===) prf Refl
 
 ||| Propositional equality implies `==`.
 export
-0 eqFromRefl : Strict a lt eq => m === n -> eq m n
-eqFromRefl prf = replace {p = eq m} prf (reflEQ {lt})
+0 eqFromEqual : Strict a lt eq => m === n -> eq m n
+eqFromEqual prf = replace {p = eq m} prf (reflEQ {lt})
 
 ||| Propositional equality implies `<=`.
 export
-0 lteFromRefl : Strict a lt eq => m === n -> Either (lt m n) (eq m n)
-lteFromRefl prf = Right $ eqFromRefl {lt} prf
+0 lteFromEqual : Strict a lt eq => m === n -> Either (lt m n) (eq m n)
+lteFromEqual prf = Right $ eqFromEqual {lt} prf
 
 ||| Propositional equality implies `>=`.
 export
-0 gteFromRefl : Strict a lt eq => m === n -> Either (lt n m) (eq n m)
-gteFromRefl prf = Right $ eqFromRefl {lt} (sym prf)
+0 gteFromEqual : Strict a lt eq => m === n -> Either (lt n m) (eq n m)
+gteFromEqual prf = Right $ eqFromEqual {lt} (sym prf)
 
 namespace EQ
 
