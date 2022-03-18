@@ -109,6 +109,18 @@ solvePlusRight prf =
     ~~ (k + m) - m  ...(plusMinusAssociative k m m)
     ~~ n - m        ...(cong (\x => x - m) prf)
 
+||| We can solve equations involving addition.
+export
+solvePlusLeft :  RingLaws a
+              => {0 k,m,n : a}
+              -> k + m === n
+              -> m === n - k
+solvePlusLeft prf =
+  solvePlusRight $ Calc $
+    |~ m + k
+    ~~ k + m ...(plusCommutative m k)
+    ~~ n     ...(prf)
+
 ||| Addition from the left is injective.
 export
 plusLeftInjective : RingLaws a => {0 k,m,n : a} -> k + n === m + n -> k === m
@@ -134,35 +146,43 @@ plusRightInjective prf =
 ||| From `m + n === 0` follows that `n` is the
 ||| additive inverse of `m`.
 export
-solvePlusRightZero :  RingLaws a
-                   => {0 m,n : a}
-                   -> m + n === 0
-                   -> n === negate m
-solvePlusRightZero prf =
+solvePlusNegateRight :  RingLaws a
+                     => {0 m,n : a}
+                     -> m + n === 0
+                     -> n === negate m
+solvePlusNegateRight prf =
   plusRightInjective (trans prf (sym $ plusNegateRightZero m))
 
 ||| From `m + n === 0` follows that `m` is the
 ||| additive inverse of `n`.
 export
-solvePlusLeftZero :  RingLaws a
-                  => {0 m,n : a}
-                  -> m + n === 0
-                  -> m === negate n
-solvePlusLeftZero prf =
-  solvePlusRightZero $
-    Calc $
-      |~ n + m
-      ~~ m + n ...(plusCommutative n m)
-      ~~ 0     ...(prf)
+solvePlusNegateLeft :  RingLaws a
+                    => {0 m,n : a}
+                    -> m + n === 0
+                    -> m === negate n
+solvePlusNegateLeft prf =
+  solvePlusNegateRight $ Calc $
+    |~ n + m
+    ~~ m + n ...(plusCommutative n m)
+    ~~ 0     ...(prf)
 
-||| From `n + n === 0` follows `n === 0`.
+||| From `m + n === m` follows `n === 0`.
 export
-solvePlusSelfZero :  RingLaws a => {0 n : a} -> n + n === n -> n === 0
-solvePlusSelfZero prf =
+solvePlusZeroRight :  RingLaws a => {0 m,n : a} -> m + n === m -> n === 0
+solvePlusZeroRight prf =
     Calc $
       |~ n
-      ~~ n - n ...(solvePlusRight prf)
-      ~~ 0     ...(minusSelfZero n)
+      ~~ m - m ...(solvePlusLeft prf)
+      ~~ 0     ...(minusSelfZero m)
+
+||| From `n + m === m` follows `n === 0`.
+export
+solvePlusZeroLeft :  RingLaws a => {0 m,n : a} -> n + m === m -> n === 0
+solvePlusZeroLeft prf =
+    solvePlusZeroRight $ Calc $
+      |~ m + n
+      ~~ n + m ...(plusCommutative m n)
+      ~~ m     ...(prf)
 
 export
 negateDistributes :  RingLaws a
@@ -170,7 +190,7 @@ negateDistributes :  RingLaws a
                   -> negate (m + n) === negate m + negate n
 negateDistributes =
   let 0 k = negate m + negate n
-   in sym $ solvePlusLeftZero $ Calc $
+   in sym $ solvePlusNegateLeft $ Calc $
       |~ (negate m + negate n) + (m + n)
       ~~ (negate m + negate n) + (n + m)  ...(cong ((negate m + negate n) +)
                                              $ plusCommutative m n)
@@ -194,7 +214,7 @@ multOneRightNeutral n =
 export
 multZeroRightAbsorbs : RingLaws a => (0 n : a) -> n * 0 === 0
 multZeroRightAbsorbs n =
-  solvePlusSelfZero $ Calc $
+  solvePlusZeroRight $ Calc $
     |~ (n * 0) + (n * 0)
     ~~ n * (0 + 0)       ...(sym $ leftDistributive n 0 0)
     ~~ n * 0             ...(cong (n *) $ plusZeroLeftNeutral 0)
@@ -212,7 +232,7 @@ multZeroLeftAbsorbs n =
 export
 multNegateRightNegates : RingLaws a => (0 m,n : a) -> m * negate n === negate (m * n)
 multNegateRightNegates m n =
-  solvePlusRightZero $ Calc $
+  solvePlusNegateRight $ Calc $
      |~ m * n + m * negate n
      ~~ m * (n + negate n)       ...(sym $ leftDistributive m n (negate n))
      ~~ m * 0                    ...(cong (m *) $ plusNegateRightZero n)
