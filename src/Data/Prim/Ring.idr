@@ -184,6 +184,11 @@ solvePlusZeroLeft prf =
       ~~ n + m ...(plusCommutative m n)
       ~~ m     ...(prf)
 
+||| Negation is involutory.
+export
+negateInvolutory : RingLaws a => (0 n : a) -> negate (negate n) === n
+negateInvolutory n = sym $ solvePlusNegateLeft (plusNegateRightZero n)
+
 export
 negateDistributes :  RingLaws a
                   => {0 m,n : a}
@@ -194,8 +199,14 @@ negateDistributes =
       |~ (negate m + negate n) + (m + n)
       ~~ (negate m + negate n) + (n + m)  ...(cong ((negate m + negate n) +)
                                              $ plusCommutative m n)
-      ~~ ((negate m + negate n) + n) + m  ...(?foo)
-      ~~ 0                                ...(?prf)
+      ~~ ((negate m + negate n) + n) + m  ...(plusAssociative _ _ _)
+      ~~ (negate m + (negate n + n)) + m  ...(cong (+m) $ sym
+                                             $ plusAssociative _ _ _)
+      ~~ (negate m + 0) + m               ...(cong (+m) $ cong (negate m +)
+                                             $ plusNegateLeftZero n)
+      ~~ negate m + m                     ...(cong (+ m)
+                                             $ plusZeroRightNeutral _)
+      ~~ 0                                ...(plusNegateLeftZero m)
 
 --------------------------------------------------------------------------------
 --          Proofs on Multiplication
@@ -230,17 +241,21 @@ multZeroLeftAbsorbs n =
 
 ||| `m * (-n) = - (m * n)`.
 export
-multNegateRightNegates : RingLaws a => (0 m,n : a) -> m * negate n === negate (m * n)
+multNegateRightNegates :  RingLaws a
+                       => (0 m,n : a)
+                       -> m * negate n === negate (m * n)
 multNegateRightNegates m n =
   solvePlusNegateRight $ Calc $
      |~ m * n + m * negate n
-     ~~ m * (n + negate n)       ...(sym $ leftDistributive m n (negate n))
-     ~~ m * 0                    ...(cong (m *) $ plusNegateRightZero n)
-     ~~ 0                        ...(multZeroRightAbsorbs m)
+     ~~ m * (n + negate n)   ...(sym $ leftDistributive m n (negate n))
+     ~~ m * 0                ...(cong (m *) $ plusNegateRightZero n)
+     ~~ 0                    ...(multZeroRightAbsorbs m)
 
 ||| `(- m) * n = - (m * n)`.
 export
-multNegateLeftNegates : RingLaws a => (0 m,n : a) -> negate m * n === negate (m * n)
+multNegateLeftNegates :  RingLaws a
+                      => (0 m,n : a)
+                      -> negate m * n === negate (m * n)
 multNegateLeftNegates m n =
   Calc $
     |~ negate m * n
@@ -265,6 +280,17 @@ multMinusOneLeftNegates n =
     |~ negate 1 * n
     ~~ negate (1 * n) ...(multNegateLeftNegates 1 n)
     ~~ negate n       ...(cong negate $ multOneLeftNeutral n)
+
+||| Multiplication of two negations removes negations.
+export
+negateMultNegate : RingLaws a => (m,n : a) -> negate m * negate n === m * n
+negateMultNegate m n =
+  Calc $
+    |~ negate m * negate n
+    ~~ negate (m * negate n)   ...(multNegateLeftNegates _ _)
+    ~~ negate (negate (m * n)) ...(cong negate $ multNegateRightNegates _ _)
+    ~~ m * n                   ...(negateInvolutory _)
+
 
 --------------------------------------------------------------------------------
 --          Implementations
