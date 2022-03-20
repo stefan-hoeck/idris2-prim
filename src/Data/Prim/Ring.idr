@@ -189,6 +189,16 @@ export
 negateInvolutory : RingLaws a => (0 n : a) -> negate (negate n) === n
 negateInvolutory n = sym $ solvePlusNegateLeft (plusNegateRightZero n)
 
+||| From `negate n === 0` follows `n === 0`.
+export
+negateZero : RingLaws a => {0 n : a} -> negate n === 0 -> n === 0
+negateZero prf =
+  Calc $
+    |~ n
+    ~~ n + 0        ...(sym $ plusZeroRightNeutral n)
+    ~~ n + negate n ...(cong (n +) $ sym prf)
+    ~~ 0            ...(plusNegateRightZero n)
+
 export
 negateDistributes :  RingLaws a
                   => {0 m,n : a}
