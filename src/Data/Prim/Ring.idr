@@ -239,6 +239,7 @@ multZeroRightAbsorbs n =
     ~~ n * (0 + 0)       ..<(leftDistributive n 0 0)
     ~~ n * 0             ..>(cong (n *) $ plusZeroLeftNeutral 0)
 
+
 ||| Zero is an absorbing element of multiplication.
 export
 multZeroLeftAbsorbs : RingLaws a => (0 n : a) -> 0 * n === 0
@@ -247,6 +248,24 @@ multZeroLeftAbsorbs n =
     |~ 0 * n
     ~~ n * 0 ...(multCommutative 0 n)
     ~~ 0     ...(multZeroRightAbsorbs n)
+
+||| Zero is an absorbing element of multiplication.
+export
+multZeroAbsorbs :  RingLaws a
+                => (0 m,n : a)
+                -> Either (m === 0) (n === 0)
+                -> m * n === 0
+multZeroAbsorbs m n (Left rfl) =
+  Calc $
+    |~ m * n
+    ~~ 0 * n ...(cong (*n) rfl)
+    ~~ 0     ...(multZeroLeftAbsorbs n)
+
+multZeroAbsorbs m n (Right rfl) =
+  Calc $
+    |~ m * n
+    ~~ m * 0 ...(cong (m*) rfl)
+    ~~ 0     ...(multZeroRightAbsorbs m)
 
 ||| `m * (-n) = - (m * n)`.
 export
@@ -315,6 +334,7 @@ negMultNeg m n =
     ~~ m * n             ...(negInvolutory _)
 
 ||| Multiplication is distributive with respect to addition.
+export
 rightDistributive :  RingLaws a
                   => (0 k,m,n : a)
                   -> (m + n) * k === (k * m) + (k * n)
@@ -323,6 +343,14 @@ rightDistributive k m n =
     |~ (m + n) * k
     ~~ k * (m + n)       ...(multCommutative _ _)
     ~~ (k * m) + (k * n) ...(leftDistributive _ _ _)
+
+export
+multPlusSelf : RingLaws a => (m,n : a) -> m * n + m === m * (n + 1)
+multPlusSelf m n =
+  Calc $
+    |~ m * n + m
+    ~~ m * n + m * 1 ..<(cong (m*n +) $ multOneRightNeutral m)
+    ~~ m * (n + 1)   ..<(leftDistributive m n 1)
 
 --------------------------------------------------------------------------------
 --          Implementations

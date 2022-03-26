@@ -97,6 +97,12 @@ Strict Integer (<) where
 replace' : (0 p : a -> Type) -> (0 _ : x = y) -> p x -> p y
 replace' p prf px = replace {p} prf px
 
+derive :  {0 a,b : Type}
+       -> (x : a)
+       -> FastDerivation a b
+       -> b
+derive x z = case Calc z of Refl => x
+
 ---------
 -- Axioms
 
@@ -113,8 +119,8 @@ plusGT k m n x = strictLT x $ mkLT unsafeRefl
 |||
 ||| From `0 < m` and `0 < n` follows `0 < m * n` for all integers `m` and `n`.
 export
-0 multGT : (m,n : Integer) -> 0 < m -> 0 < n -> 0 < m * n
-multGT _ _ p1 p2 = strictLT p1 $ strictLT p2 $ mkLT unsafeRefl
+0 multPosPosGT0 : (m,n : Integer) -> 0 < m -> 0 < n -> 0 < m * n
+multPosPosGT0 _ _ p1 p2 = strictLT p1 $ strictLT p2 $ mkLT unsafeRefl
 
 ||| There is no integer between 0 and 1.
 export
@@ -136,8 +142,8 @@ modLT n d x with (mod n d)
   _ | _ = strictLT x (Left $ mkLT unsafeRefl, mkLT unsafeRefl)
 
 export
-0 modNegLT : (n,d : Integer) -> d < 0 -> mod n d === mod n (neg d)
-modNegLT n d x = strictLT x unsafeRefl
+0 modNegEQ : (n,d : Integer) -> d < 0 -> mod n d === mod n (neg d)
+modNegEQ n d x = strictLT x unsafeRefl
 
 export
 0 lawDivMod : (n,d : Integer) -> d /= 0 -> d * div n d + mod n d === n
@@ -151,16 +157,19 @@ lawDivMod n d (Right x) = strictLT x unsafeRefl
 export
 0 plusGT' : (k,m,n : Integer) -> k < m -> k + n < m + n
 plusGT' k m n lt =
-  replace' (< m + n) (plusCommutative n k) $
-  replace' (n + k <) (plusCommutative n m) $
-  plusGT k m n lt
+  derive (plusGT k m n lt) $
+   |~ (n + k < n + m)
+   ~~ (n + k < m + n) ...(cong (n+k <) $ plusCommutative n m)
+   ~~ (k + n < m + n) ...(cong (< m+n) $ plusCommutative n k)
 
 ||| The result of adding a positive number to `m` is strictly greater
 ||| than `m`.
 export
 0 plusPositiveGT : (m,n : Integer) -> 0 < n -> m < m + n
 plusPositiveGT m n lt =
-  replace' (< m + n) (plusZeroRightNeutral m) (plusGT 0 n m lt)
+  derive (plusGT 0 n m lt) $
+    |~ (m + 0 < m + n)
+    ~~ (m < m + n) ...(cong (< m + n) $ plusZeroRightNeutral m)
 
 ||| The result of adding a non-negative number to `m` is not less
 ||| than `m`.
@@ -170,7 +179,7 @@ plusNonNegativeGTE m n (Left x) = Left $ plusPositiveGT m n x
 plusNonNegativeGTE m n (Right x) =
   Right $ Calc $
     |~ m
-    ~~ m + 0 ...(sym $ plusZeroRightNeutral m)
+    ~~ m + 0 ..<(plusZeroRightNeutral m)
     ~~ m + n ...(cong (m +) x)
 
 ||| The result of adding a negative number to `m` is strictly less
@@ -178,7 +187,9 @@ plusNonNegativeGTE m n (Right x) =
 export
 0 plusNegativeLT : (m,n : Integer) -> n < 0 -> m > m + n
 plusNegativeLT m n lt =
-  replace' (> m + n) (plusZeroRightNeutral m) (plusGT n 0 m lt)
+  derive (plusGT n 0 m lt) $
+    |~ (m + n < m + 0)
+    ~~ (m + n < m) ...(cong (m+n <) $ plusZeroRightNeutral m)
 
 ||| The result of adding a non-positive number to `m` is not greater
 ||| than `m`.
@@ -193,19 +204,51 @@ plusNonPositiveLTE m n (Right x) =
 
 ||| From `m < m + n` follows `n > 0`.
 export
-0 solvePlusGT : (m,n : Integer) -> m < m + n -> 0 < n
-solvePlusGT m n lt = case comp 0 n of
+0 solvePlusRightGT : (m,n : Integer) -> m < m + n -> 0 < n
+solvePlusRightGT m n lt = case comp 0 n of
   LT x _    _ => x
   EQ _ Refl _ => void (LT_not_EQ lt (sym $ plusZeroRightNeutral m))
   GT _ _    x => void (LT_not_GT lt $ plusNegativeLT m n x)
 
+||| From `m < n + m` follows `n > 0`.
+export
+0 solvePlusLeftGT : (m,n : Integer) -> m < n + m -> 0 < n
+solvePlusLeftGT m n lt =
+  solvePlusRightGT m n $ derive lt $
+    |~ m < n + m
+    ~~ m < m + n ...(cong (m <) $ plusCommutative n m)
+
 ||| From `m > m + n` follows `n < 0`.
 export
-0 solvePlusLT : (m,n : Integer) -> m > m + n -> n < 0
-solvePlusLT m n lt = case comp 0 n of
+0 solvePlusRightLT : (m,n : Integer) -> m > m + n -> n < 0
+solvePlusRightLT m n lt = case comp 0 n of
   LT x _    _ => void (LT_not_GT lt $ plusPositiveGT m n x)
   EQ _ Refl _ => void (GT_not_EQ lt (sym $ plusZeroRightNeutral m))
   GT _ _    x => x
+
+||| From `m > n + m` follows `n < 0`.
+export
+0 solvePlusLeftLT : (m,n : Integer) -> m > n + m -> 0 > n
+solvePlusLeftLT m n lt =
+  solvePlusRightLT m n $ derive lt $
+    |~ m > n + m
+    ~~ m > m + n ...(cong (m >) $ plusCommutative n m)
+
+||| From `0 < m + 1` follows `0 <= m`.
+export
+0 solvePlusOneRightGT0 : (m : Integer) -> 0 < m + 1 -> 0 <= m
+solvePlusOneRightGT0 m lt = case oneAfterZero (m+1) lt of
+  Left x  => Left $ solvePlusLeftGT 1 m x
+  Right x => Right $ sym $ solvePlusZeroLeft $ sym x
+
+||| From `0 < 1 + m` follows `0 <= m`.
+export
+0 solvePlusOneLeftGT0 : (m : Integer) -> 0 < 1 + m -> 0 <= m
+solvePlusOneLeftGT0 m lt =
+  solvePlusOneRightGT0 m $ derive lt $
+    |~ 0 < 1 + m
+    ~~ 0 < m + 1 ...(cong (0 <) $ plusCommutative 1 m)
+
 
 ||| From `k < m` and `l <= n` follows `k + l < m + n`.
 export
@@ -246,15 +289,15 @@ negNegativePositive n lt0 = case comp 0 (neg n) of
 ||| From `m < n` follows `0 < n - m`.
 export
 0 minusSmallerPositive : (m,n : Integer) -> m < n -> n - m > 0
-minusSmallerPositive m n lt = solvePlusGT m (n - m) (replace' (m <) lemma lt)
+minusSmallerPositive m n lt = solvePlusRightGT m (n - m) (replace' (m <) lemma lt)
   where lemma : n === m + (n - m)
         lemma = Calc $
           |~ n
-          ~~ n + 0       ...(sym $ plusZeroRightNeutral n)
-          ~~ n + (m - m) ...(cong (n+) $ sym $ minusSelfZero m)
+          ~~ n + 0       ..<(plusZeroRightNeutral n)
+          ~~ n + (m - m) ..<(cong (n+) $ minusSelfZero m)
           ~~ (n + m) - m ...(plusMinusAssociative _ _ _)
           ~~ (m + n) - m ...(cong (\x => x - m) $ plusCommutative _ _)
-          ~~ m + (n - m) ...(sym $ plusMinusAssociative _ _ _)
+          ~~ m + (n - m) ..<(plusMinusAssociative _ _ _)
 
 ----------------------------
 -- Multiplication
@@ -262,21 +305,158 @@ minusSmallerPositive m n lt = solvePlusGT m (n - m) (replace' (m <) lemma lt)
 ||| Multiplying a negative number with a positive number
 ||| yields a negative number.
 export
-0 multNegativeRightLT0 : (m,n : Integer) -> 0 < m -> n < 0 -> m * n < 0
-multNegativeRightLT0 m n x y =
+0 multPosNegLT0 : (m,n : Integer) -> 0 < m -> n < 0 -> m * n < 0
+multPosNegLT0 m n x y =
   replace' (< 0)
     (negMultNegRight _ _)
     ( negPositiveNegative (m * neg n)
-    $ multGT _ _ x (negNegativePositive n y))
+    $ multPosPosGT0 _ _ x (negNegativePositive n y))
 
 ||| Multiplying a negative number with a positive number
 ||| yields a negative number.
 export
-0 multNegativeLeftLT0 : (m,n : Integer) -> m < 0 -> 0 < n -> m * n < 0
-multNegativeLeftLT0 m n x y =
+0 multNegPosLT0 : (m,n : Integer) -> m < 0 -> 0 < n -> m * n < 0
+multNegPosLT0 m n x y =
   replace' (< 0)
     (multCommutative _ _)
-    (multNegativeRightLT0 n m y x)
+    (multPosNegLT0 n m y x)
+
+||| Multiplying two negative numbers yields a positive number.
+export
+0 multNegNegGT0 : (m,n : Integer) -> m < 0 -> n < 0 -> 0 < m * n
+multNegNegGT0 m n x y =
+  let negm_pos = negNegativePositive m x
+      negn_pos = negNegativePositive n y
+   in derive (multPosPosGT0 (neg m) (neg n) negm_pos negn_pos) $
+        |~ 0 < neg m * neg n
+        ~~ 0 < m * n         ...(cong (0 <) $ negMultNeg m n)
+
+||| From `m * n === 0` follows `m === 0` or `n === 0`
+export
+0 solveMultZero :  (m,n : Integer)
+                -> m * n === 0
+                -> Either (m === 0) (n === 0)
+solveMultZero m n p = case (comp 0 m, comp 0 n) of
+  (EQ _ x _, _       ) => Left $ sym x
+  (_       , EQ _ x _) => Right $ sym x
+  (LT x _ _, LT y _ _) => void $ GT_not_EQ (multPosPosGT0 m n x y) p
+  (GT _ _ x, LT y _ _) => void $ LT_not_EQ (multNegPosLT0 m n x y) p
+  (LT x _ _, GT _ _ y) => void $ LT_not_EQ (multPosNegLT0 m n x y) p
+  (GT _ _ x, GT _ _ y) => void $ GT_not_EQ (multNegNegGT0 m n x y) p
+
+||| From `m * n > 0` follows `m > 0` and `n > 0`
+||| or `m < 0` and `n < 0`.
+export
+0 solveMultPos :  (m,n : Integer)
+                -> 0 < m * n
+                -> Either (m > 0, n > 0) (m < 0, n < 0)
+solveMultPos m n p = case (comp m 0, comp n 0) of
+  (LT x _ _, LT y _ _) => Right (x,y)
+  (GT _ _ x, GT _ _ y) => Left (x,y)
+
+  (GT _ _ x, LT y _ _) => void $ LT_not_GT (multPosNegLT0 m n x y) p
+  (LT x _ _, GT _ _ y) => void $ LT_not_GT (multNegPosLT0 m n x y) p
+  (EQ _ x _, _       ) => void $ EQ_not_GT (multZeroAbsorbs m n (Left x)) p
+  (_       , EQ _ x _) => void $ EQ_not_GT (multZeroAbsorbs m n (Right x)) p
+
+||| From `m * n < 0` follows `m > 0` and `n < 0`
+||| or `m < 0` and `n > 0`.
+export
+0 solveMultNeg :  (m,n : Integer)
+                -> 0 > m * n
+                -> Either (m < 0, n > 0) (m > 0, n < 0)
+solveMultNeg m n p = case (comp m 0, comp n 0) of
+  (GT _ _ x, LT y _ _) => Right (x,y)
+  (LT x _ _, GT _ _ y) => Left (x,y)
+
+  (LT x _ _, LT y _ _) => void $ GT_not_LT (multNegNegGT0 m n x y) p
+  (GT _ _ x, GT _ _ y) => void $ GT_not_LT (multPosPosGT0 m n x y) p
+  (EQ _ x _, _       ) => void $ EQ_not_LT (multZeroAbsorbs m n (Left x)) p
+  (_       , EQ _ x _) => void $ EQ_not_LT (multZeroAbsorbs m n (Right x)) p
+
+||| From `0 < m` and `0 < m * n` follows `0 < n`.
+export
+0 solveMultPosLeftGT0 : (m,n : Integer) -> 0 < m -> 0 < m * n -> 0 < n
+solveMultPosLeftGT0 m n x y = case solveMultPos m n y of
+  Left z  => snd z
+  Right z => void $ GT_not_LT x (fst z)
+
+||| From `0 < m` and `0 < n * m` follows `0 < n`.
+export
+0 solveMultPosRightGT0 : (m,n : Integer) -> 0 < m -> 0 < n * m -> 0 < n
+solveMultPosRightGT0 m n x y = case solveMultPos n m y of
+  Left z  => fst z
+  Right z => void $ GT_not_LT x (snd z)
+
+||| From `0 > m` and `0 < m * n` follows `0 > n`.
+export
+0 solveMultNegLeftGT0 : (m,n : Integer) -> 0 > m -> 0 < m * n -> 0 > n
+solveMultNegLeftGT0 m n x y = case solveMultPos m n y of
+  Right z => snd z
+  Left z  => void $ GT_not_LT x (fst z)
+
+||| From `0 > m` and `0 < n * m` follows `0 > n`.
+export
+0 solveMultNegRightGT0 : (m,n : Integer) -> 0 > m -> 0 < n * m -> 0 > n
+solveMultNegRightGT0 m n x y = case solveMultPos n m y of
+  Right z => fst z
+  Left z  => void $ GT_not_LT x (snd z)
+
+||| From `0 < m` and `0 > m * n` follows `0 > n`.
+export
+0 solveMultPosLeftLT0 : (m,n : Integer) -> 0 < m -> 0 > m * n -> 0 > n
+solveMultPosLeftLT0 m n x y = case solveMultNeg m n y of
+  Right z => snd z
+  Left z  => void $ GT_not_LT x (fst z)
+
+||| From `0 < m` and `0 > n * m` follows `0 > n`.
+export
+0 solveMultPosRightLT0 : (m,n : Integer) -> 0 < m -> 0 > n * m -> 0 > n
+solveMultPosRightLT0 m n x y = case solveMultNeg n m y of
+  Left z  => fst z
+  Right z => void $ LT_not_GT x $ snd z
+
+||| From `0 > m` and `0 > m * n` follows `0 < n`.
+export
+0 solveMultNegLeftLT0 : (m,n : Integer) -> 0 > m -> 0 > m * n -> 0 < n
+solveMultNegLeftLT0 m n x y = case solveMultNeg m n y of
+  Left z  => snd z
+  Right z => void $ GT_not_LT x (fst z)
+
+||| From `0 > m` and `0 > n * m` follows `0 < n`.
+export
+0 solveMultNegRightLT0 : (m,n : Integer) -> 0 > m -> 0 > n * m -> 0 < n
+solveMultNegRightLT0 m n x y = case solveMultNeg n m y of
+  Right z => fst z
+  Left z  => void $ GT_not_LT x (snd z)
+
+||| From `0 < m` and `0 === m * n` follows `0 === n`.
+export
+0 solveMultPosLeftEQ0 : (m,n : Integer) -> 0 < m -> m * n === 0 -> n === 0
+solveMultPosLeftEQ0 m n x y = case solveMultZero m n y of
+  Right z => z
+  Left z  => void $ GT_not_EQ x z
+
+||| From `0 < m` and `0 === n * m` follows `0 === n`.
+export
+0 solveMultPosRightEQ0 : (m,n : Integer) -> 0 < m -> n * m === 0 -> n === 0
+solveMultPosRightEQ0 m n x y = case solveMultZero n m y of
+  Left z  => z
+  Right z => void $ GT_not_EQ x z
+
+||| From `0 > m` and `0 === m * n` follows `0 === n`.
+export
+0 solveMultNegLeftEQ0 : (m,n : Integer) -> 0 > m -> m * n === 0 -> n === 0
+solveMultNegLeftEQ0 m n x y = case solveMultZero m n y of
+  Right z => z
+  Left z  => void $ LT_not_EQ x z
+
+||| From `0 > m` and `0 === n * m` follows `0 === n`.
+export
+0 solveMultNegRightEQ0 : (m,n : Integer) -> 0 > m -> n * m === 0 -> n === 0
+solveMultNegRightEQ0 m n x y = case solveMultZero n m y of
+  Left z  => z
+  Right z => void $ LT_not_EQ x z
 
 ----------------------------
 -- Division
@@ -296,44 +476,37 @@ smod n d = n `mod` d
 export
 0 multDivPlusOneGT : (n,d : Integer) -> (0 < d) -> d * (div n d + 1) > n
 multDivPlusOneGT n d dgt0 =
-  let -- d * div n d + mod n d === n
-      law = lawDivMod n d $ Right dgt0
-      -- d * div n d + d > d * div n d + mod n d
-      res1 = plusGT (mod n d) d (d * div n d) (snd $ modLT n d dgt0)
-      -- d * div n d + d > n
-      res2 = replace' (< d * div n d + d) law res1
-   in replace' (n <) lemma res2
-  where lemma : d * div n d + d === d * (div n d + 1)
-        lemma = Calc $
-          |~ d * div n d + d
-          ~~ d * div n d + d * 1 ...(cong (d * div n d +) $ sym $ multOneRightNeutral d)
-          ~~ d * (div n d + 1)   ...(sym $ leftDistributive _ _ _)
+  let law = cong (d * div n d + d >) $ lawDivMod n d (Right dgt0)
+   in derive (plusGT (mod n d) d (d * div n d) (snd $ modLT n d dgt0)) $
+        |~ d * div n d + d > d * div n d + mod n d
+        ~~ d * div n d + d   > n ...law
+        ~~ d * (div n d + 1) > n ...(cong (> n) $ multPlusSelf _ _)
 
 ||| For positive `n` and positive `d`, `d * div n d` is
 ||| not less than `n`.
 export
 0 multDivLTE : (n,d : Integer) -> (0 < d) -> d * div n d <= n
 multDivLTE n d dgt0 =
-  let -- d * div n d + mod n d === n
-      law = lawDivMod n d $ Right dgt0
-      -- 0 <= mod n d
-      res1 = fst $ modLT n d dgt0
-      -- d * div n d <= d * div n d + mod n d
-      res2 = plusNonNegativeGTE (d * div n d) (mod n d) res1
-   in ?muumu
+  let law = lawDivMod n d $ Right dgt0
+   in derive (plusNonNegativeGTE _ _ (fst $ modLT n d dgt0)) $
+        |~ d * div n d <= d * div n d + mod n d
+        ~~ d * div n d <= n ...(cong (d * div n d <=) $ law)
 
--- ||| For non-negative `n` and positive `d`, `div n d` is non-negative.
--- export
--- 0 divPositiveGTE0 : (n,d : Integer) -> (0 <= n) -> (0 < d) -> div n d >= 0
--- divPositiveGTE0 n d x y = assert_total $ case comp 0 (div n d) of
---   LT z _ _ => Left z
---   EQ _ z _ => Right z
---
---   -- x < 0 => x * d + y < y < n
---   GT _ _ z =>
---     let xdy_lt_n = trans (multNegativeRightLT0 _ _ y z)
---     in ?foosdl_2
---
+||| For non-negative `n` and positive `d`, `div n d` is non-negative.
+export
+0 divNonNegativeGTE0 : (n,d : Integer) -> 0 <= n -> 0 < d -> div n d >= 0
+divNonNegativeGTE0 n d x y =
+  let gtn = trans_LTE_LT x $ multDivPlusOneGT n d y
+      gt0 = solveMultPosLeftGT0 _ _ y gtn
+   in solvePlusOneRightGT0 _ gt0
+
+||| For non-negative `n` and positive `d`, `mod n d <= n` holds.
+export
+0 modNonNegativeLTE : (n,d : Integer) -> 0 <= n -> 0 < d -> mod n d <= n
+modNonNegativeLTE n d x y =
+  let p1 = solvePlusLeft $ lawDivMod n d $ Right y
+   in ?foo
+
 --
 -- ||| For non-negative `n` and positive `d`, `div n d` is not greater
 -- ||| than `n`.
@@ -348,7 +521,7 @@ multDivLTE n d dgt0 =
 -- 0 div0 : (d : Integer) -> (0 < d) -> div 0 d === 0
 -- div0 d x = assert_total $ case comp (div 0 d) 0 of
 --   EQ _ y _ => y
---   GT _ _ y => void (EQ_not_GT (lawDivMod 0 d $ Right x) $ plusPositiveGT0 _ _ (multGT _ _ x y) ?p2)
+--   GT _ _ y => void (EQ_not_GT (lawDivMod 0 d $ Right x) $ plusPositiveGT0 _ _ (multPosPosGT0 _ _ x y) ?p2)
 --   LT y _ _ => ?dd0_0
 --
 --
