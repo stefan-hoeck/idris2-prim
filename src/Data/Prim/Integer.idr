@@ -86,7 +86,7 @@ comp m n = case prim__lt_Integer m n of
   x => LT (LT unsafeRefl) (ltNotEQ $ LT unsafeRefl) (ltNotGT $ LT unsafeRefl)
 
 export
-Strict Integer (<) where
+Total Integer (<) where
   trichotomy   = comp
   transLT p q  = strictLT p $ strictLT q $ LT unsafeRefl
 
