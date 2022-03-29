@@ -1,4 +1,4 @@
-module Data.Prim.Ring
+module Algebra.Ring
 
 import Syntax.PreorderReasoning
 
@@ -30,31 +30,31 @@ neg = negate
 public export
 interface Neg a => RingLaws a where
   ||| Addition is associative.
-  plusAssociative : (0 k,m,n : a) -> k + (m + n) === (k + m) + n
+  plusAssociative : (k,m,n : a) -> k + (m + n) === (k + m) + n
 
   ||| Addition is commutative.
-  plusCommutative : (0 m,n : a) -> m + n === n + m
+  plusCommutative : (m,n : a) -> m + n === n + m
 
   ||| 0 is the additive identity.
-  plusZeroLeftNeutral : (0 n : a) -> 0 + n === n
+  plusZeroLeftNeutral : (n : a) -> 0 + n === n
 
   ||| `neg n` is the additive inverse of `n`.
-  plusNegLeftZero : (0 n : a) -> neg n + n === 0
+  plusNegLeftZero : (n : a) -> neg n + n === 0
 
   ||| Multiplication is associative.
-  multAssociative : (0 k,m,n : a) -> k * (m * n) === (k * m) * n
+  multAssociative : (k,m,n : a) -> k * (m * n) === (k * m) * n
 
   ||| Multiplication is commutative.
-  multCommutative : (0 m,n : a) -> m * n === n * m
+  multCommutative : (m,n : a) -> m * n === n * m
 
   ||| 1 is the multiplicative identity.
-  multOneLeftNeutral : (0 n : a) -> 1 * n === n
+  multOneLeftNeutral : (n : a) -> 1 * n === n
 
   ||| Multiplication is distributive with respect to addition.
-  leftDistributive : (0 k,m,n : a) -> k * (m + n) === (k * m) + (k * n)
+  leftDistributive : (k,m,n : a) -> k * (m + n) === (k * m) + (k * n)
 
   ||| `m - n` is just "syntactic sugar" for `m + neg n`.
-  minusIsPlusNeg : (0 m,n : a) -> m - n === m + neg n
+  minusIsPlusNeg : (m,n : a) -> m - n === m + neg n
 
 --------------------------------------------------------------------------------
 --          Proofs on Addition
@@ -62,7 +62,7 @@ interface Neg a => RingLaws a where
 
 ||| `n + 0 === n` for all `n : a`.
 export
-plusZeroRightNeutral : RingLaws a => (0 n : a) -> n + 0 === n
+plusZeroRightNeutral : RingLaws a => (n : a) -> n + 0 === n
 plusZeroRightNeutral n =
   Calc $
     |~ n + 0
@@ -71,7 +71,7 @@ plusZeroRightNeutral n =
 
 ||| `n + neg n === 0` for all `n : a`.
 export
-plusNegRightZero : RingLaws a => (0 n : a) -> n + neg n === 0
+plusNegRightZero : RingLaws a => (n : a) -> n + neg n === 0
 plusNegRightZero n =
   Calc $
     |~ n + neg n
@@ -80,7 +80,7 @@ plusNegRightZero n =
 
 ||| `n - n === 0` for all `n : a`.
 export
-minusSelfZero : RingLaws a => (0 n : a) -> n - n === 0
+minusSelfZero : RingLaws a => (n : a) -> n - n === 0
 minusSelfZero n =
   Calc $
     |~ n - n
@@ -90,7 +90,7 @@ minusSelfZero n =
 ||| Law of associativity for subtraction.
 export
 plusMinusAssociative :  RingLaws a
-                     => (0 k,m,n : a)
+                     => (k,m,n : a)
                      -> k + (m - n) === (k + m) - n
 plusMinusAssociative k m n =
   Calc $
@@ -102,7 +102,7 @@ plusMinusAssociative k m n =
 ||| We can solve equations involving addition.
 export
 solvePlusRight :  RingLaws a
-               => {0 k,m,n : a}
+               => {k,m,n : a}
                -> k + m === n
                -> k === n - m
 solvePlusRight prf =
@@ -116,7 +116,7 @@ solvePlusRight prf =
 ||| We can solve equations involving addition.
 export
 solvePlusLeft :  RingLaws a
-              => {0 k,m,n : a}
+              => {k,m,n : a}
               -> k + m === n
               -> m === n - k
 solvePlusLeft prf =
@@ -127,7 +127,7 @@ solvePlusLeft prf =
 
 ||| Addition from the left is injective.
 export
-plusLeftInjective : RingLaws a => {0 k,m,n : a} -> k + n === m + n -> k === m
+plusLeftInjective : RingLaws a => {k,m,n : a} -> k + n === m + n -> k === m
 plusLeftInjective prf =
   Calc $
     |~ k
@@ -138,7 +138,7 @@ plusLeftInjective prf =
 
 ||| Addition from the right is injective.
 export
-plusRightInjective : RingLaws a => {0 k,m,n : a} -> n + k === n + m -> k === m
+plusRightInjective : RingLaws a => {k,m,n : a} -> n + k === n + m -> k === m
 plusRightInjective prf =
   plusLeftInjective $
     Calc $
@@ -151,7 +151,7 @@ plusRightInjective prf =
 ||| additive inverse of `m`.
 export
 solvePlusNegRight :  RingLaws a
-                  => {0 m,n : a}
+                  => {m,n : a}
                   -> m + n === 0
                   -> n === neg m
 solvePlusNegRight prf =
@@ -161,7 +161,7 @@ solvePlusNegRight prf =
 ||| additive inverse of `n`.
 export
 solvePlusNegLeft :  RingLaws a
-                 => {0 m,n : a}
+                 => {m,n : a}
                  -> m + n === 0
                  -> m === neg n
 solvePlusNegLeft prf =
@@ -172,7 +172,7 @@ solvePlusNegLeft prf =
 
 ||| From `m + n === m` follows `n === 0`.
 export
-solvePlusZeroRight :  RingLaws a => {0 m,n : a} -> m + n === m -> n === 0
+solvePlusZeroRight :  RingLaws a => {m,n : a} -> m + n === m -> n === 0
 solvePlusZeroRight prf =
     Calc $
       |~ n
@@ -181,7 +181,7 @@ solvePlusZeroRight prf =
 
 ||| From `n + m === m` follows `n === 0`.
 export
-solvePlusZeroLeft :  RingLaws a => {0 m,n : a} -> n + m === m -> n === 0
+solvePlusZeroLeft :  RingLaws a => {m,n : a} -> n + m === m -> n === 0
 solvePlusZeroLeft prf =
     solvePlusZeroRight $ Calc $
       |~ m + n
@@ -190,21 +190,26 @@ solvePlusZeroLeft prf =
 
 ||| Negation is involutory.
 export
-negInvolutory : RingLaws a => (0 n : a) -> neg (neg n) === n
+negInvolutory : RingLaws a => (n : a) -> neg (neg n) === n
 negInvolutory n = sym $ solvePlusNegLeft (plusNegRightZero n)
 
 ||| From `neg n === 0` follows `n === 0`.
 export
-negZero : RingLaws a => {0 n : a} -> neg n === 0 -> n === 0
-negZero prf =
+solveNegZero : RingLaws a => {n : a} -> neg n === 0 -> n === 0
+solveNegZero prf =
   Calc $
     |~ n
     ~~ n + 0     ..<(plusZeroRightNeutral n)
     ~~ n + neg n ..<(cong (n +) prf)
     ~~ 0         ..>(plusNegRightZero n)
 
+||| `neg 0 === 0`
 export
-negDistributes : RingLaws a => {0 m,n : a} -> neg (m + n) === neg m + neg n
+negZero : RingLaws a => neg {a} 0 === 0
+negZero = solveNegZero (negInvolutory 0)
+
+export
+negDistributes : RingLaws a => {m,n : a} -> neg (m + n) === neg m + neg n
 negDistributes =
   sym $ solvePlusNegLeft $ Calc $
   |~ (neg m + neg n) + (m + n)
@@ -223,7 +228,7 @@ negDistributes =
 
 ||| `n * 1 === n` for all `n : a`.
 export
-multOneRightNeutral : RingLaws a => (0 n : a) -> n * 1 === n
+multOneRightNeutral : RingLaws a => (n : a) -> n * 1 === n
 multOneRightNeutral n =
   Calc $
     |~ n * 1
@@ -232,7 +237,7 @@ multOneRightNeutral n =
 
 ||| Zero is an absorbing element of multiplication.
 export
-multZeroRightAbsorbs : RingLaws a => (0 n : a) -> n * 0 === 0
+multZeroRightAbsorbs : RingLaws a => (n : a) -> n * 0 === 0
 multZeroRightAbsorbs n =
   solvePlusZeroRight $ Calc $
     |~ (n * 0) + (n * 0)
@@ -242,7 +247,7 @@ multZeroRightAbsorbs n =
 
 ||| Zero is an absorbing element of multiplication.
 export
-multZeroLeftAbsorbs : RingLaws a => (0 n : a) -> 0 * n === 0
+multZeroLeftAbsorbs : RingLaws a => (n : a) -> 0 * n === 0
 multZeroLeftAbsorbs n =
   Calc $
     |~ 0 * n
@@ -252,7 +257,7 @@ multZeroLeftAbsorbs n =
 ||| Zero is an absorbing element of multiplication.
 export
 multZeroAbsorbs :  RingLaws a
-                => (0 m,n : a)
+                => (m,n : a)
                 -> Either (m === 0) (n === 0)
                 -> m * n === 0
 multZeroAbsorbs m n (Left rfl) =
@@ -269,7 +274,7 @@ multZeroAbsorbs m n (Right rfl) =
 
 ||| `m * (-n) = - (m * n)`.
 export
-multNegRight : RingLaws a => (0 m,n : a) -> m * neg n === neg (m * n)
+multNegRight : RingLaws a => (m,n : a) -> m * neg n === neg (m * n)
 multNegRight m n =
   solvePlusNegRight $ Calc $
      |~ m * n + m * neg n
@@ -279,7 +284,7 @@ multNegRight m n =
 
 ||| `- (m * (-n)) = m * n`.
 export
-negMultNegRight : RingLaws a => (0 m,n : a) -> neg (m * neg n) === m * n
+negMultNegRight : RingLaws a => (m,n : a) -> neg (m * neg n) === m * n
 negMultNegRight m n =
   Calc $
     |~ neg (m * neg n)
@@ -288,7 +293,7 @@ negMultNegRight m n =
 
 ||| `(- m) * n = - (m * n)`.
 export
-multNegLeft : RingLaws a => (0 m,n : a) -> neg m * n === neg (m * n)
+multNegLeft : RingLaws a => (m,n : a) -> neg m * n === neg (m * n)
 multNegLeft m n =
   Calc $
     |~ neg m * n
@@ -298,7 +303,7 @@ multNegLeft m n =
 
 ||| `- ((-m) * n) = m * n`.
 export
-negMultNegLeft : RingLaws a => (0 m,n : a) -> neg (neg m * n) === m * n
+negMultNegLeft : RingLaws a => (m,n : a) -> neg (neg m * n) === m * n
 negMultNegLeft m n =
   Calc $
     |~ neg (neg m * n)
@@ -307,7 +312,7 @@ negMultNegLeft m n =
 
 ||| Multiplication with `(-1)` is negation.
 export
-multMinusOneRight : RingLaws a => (0 n : a) -> n * neg 1 === neg n
+multMinusOneRight : RingLaws a => (n : a) -> n * neg 1 === neg n
 multMinusOneRight n =
   Calc $
     |~ n * neg 1
@@ -316,7 +321,7 @@ multMinusOneRight n =
 
 ||| Multiplication with `(-1)` is negation.
 export
-multMinusOneLeft : RingLaws a => (0 n : a) -> neg 1 * n === neg n
+multMinusOneLeft : RingLaws a => (n : a) -> neg 1 * n === neg n
 multMinusOneLeft n =
   Calc $
     |~ neg 1 * n
@@ -336,13 +341,15 @@ negMultNeg m n =
 ||| Multiplication is distributive with respect to addition.
 export
 rightDistributive :  RingLaws a
-                  => (0 k,m,n : a)
-                  -> (m + n) * k === (k * m) + (k * n)
+                  => (k,m,n : a)
+                  -> (m + n) * k === m * k + n * k
 rightDistributive k m n =
   Calc $
     |~ (m + n) * k
     ~~ k * (m + n)       ...(multCommutative _ _)
     ~~ (k * m) + (k * n) ...(leftDistributive _ _ _)
+    ~~ m * k + k * n  ...(cong (+ k * n) $ multCommutative _ _)
+    ~~ m * k + n * k  ...(cong (m * k +) $ multCommutative _ _)
 
 export
 multPlusSelf : RingLaws a => (m,n : a) -> m * n + m === m * (n + 1)

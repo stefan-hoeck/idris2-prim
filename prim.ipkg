@@ -8,7 +8,16 @@ license    = "BSD-3 Clause"
 sourcedir  = "src"
 depends    = base    >= 0.5.1
 
-modules = Data.Prim
+modules = Algebra.Semigroup
+        , Algebra.Monoid
+        , Algebra.Ring
+        , Algebra.Solver.Ring
+        , Algebra.Solver.Ring.Expr
+        , Algebra.Solver.Ring.Prod
+        , Algebra.Solver.Ring.Sum
+        , Algebra.Solver.Ring.Util
+
+        , Data.Prim
         , Data.Prim.Char
         , Data.Prim.Bits8
         , Data.Prim.Bits16
@@ -21,6 +30,5 @@ modules = Data.Prim
         , Data.Prim.Int
         , Data.Prim.Integer
         , Data.Prim.Ord
-        , Data.Prim.Ring
         , Data.Prim.String
         , Data.Trichotomy

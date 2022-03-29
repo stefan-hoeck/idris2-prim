@@ -3,7 +3,7 @@ module Data.Prim.Integer
 import public Control.WellFounded
 import public Data.DPair
 import public Data.Prim.Ord
-import public Data.Prim.Ring
+import public Algebra.Ring
 import Syntax.PreorderReasoning
 
 %default total
@@ -274,7 +274,7 @@ export
 negPositiveNegative n gt0 = case comp 0 (neg n) of
   LT x _ _ =>
     void (GT_not_EQ (plusPositiveGT0 _ _ gt0 $ Left x) (plusNegRightZero n))
-  EQ _ x _ => void (GT_not_EQ gt0 $ negZero (sym x))
+  EQ _ x _ => void (GT_not_EQ gt0 $ solveNegZero (sym x))
   GT _ _ x => x
 
 ||| From `n < 0` follows `0 < neg n`.
@@ -282,7 +282,7 @@ export
 0 negNegativePositive : (n : Integer) -> n < 0 -> neg n > 0
 negNegativePositive n lt0 = case comp 0 (neg n) of
   LT x _ _ => x
-  EQ _ x _ => void (LT_not_EQ lt0 $ negZero (sym x))
+  EQ _ x _ => void (LT_not_EQ lt0 $ solveNegZero (sym x))
   GT _ _ x =>
     void (LT_not_EQ (plusNegativeLT0 _ _ lt0 %search) (plusNegRightZero n))
 
