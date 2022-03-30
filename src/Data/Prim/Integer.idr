@@ -1,9 +1,7 @@
 module Data.Prim.Integer
 
-import public Control.WellFounded
-import public Data.DPair
 import public Data.Prim.Ord
-import public Algebra.Ring
+import public Algebra.Solver.Ring
 import Syntax.PreorderReasoning
 
 %default total
@@ -89,6 +87,49 @@ export
 Total Integer (<) where
   trichotomy   = comp
   transLT p q  = strictLT p $ strictLT q $ LT unsafeRefl
+
+--------------------------------------------------------------------------------
+--          Ring Solver
+--------------------------------------------------------------------------------
+
+public export
+record SSInteger (as : List Integer) (s : Sum Integer as) where
+  constructor SS
+  sum   : Sum Integer as
+  0 prf : esum sum === esum s
+
+public export
+sumInteger_ : (s : Sum Integer as) -> SSInteger as s
+sumInteger_ []           = SS [] Refl
+sumInteger_ (T f p :: y) =
+  let SS sy py = sumInteger_ y
+   in case f of
+        0 => SS sy (psum0 py)
+        _ => SS (T f p :: sy) (cong ((f * eprod p) +) py)
+
+public export
+normInteger : {as : List Integer} -> Expr Integer as -> Sum Integer as
+normInteger e = sum $ sumInteger_ $ normalize e
+
+0 pnormInteger :  {as : List Integer}
+               -> (e : Expr Integer as)
+               -> eval e === esum (normInteger e)
+pnormInteger e with (sumInteger_ $ normalize e)
+  pnormInteger e | SS sInteger prf = Calc $
+    |~ eval e
+    ~~ esum (normalize e)  ...(pnormalize e)
+    ~~ esum sInteger            ..<(prf)
+
+export
+0 solve :  (as : List Integer)
+        -> (e1,e2 : Expr Integer as)
+        -> (prf : normInteger e1 === normInteger e2)
+        => eval e1 === eval e2
+solve _ e1 e2 = Calc $
+  |~ eval e1
+  ~~ esum (normInteger e1) ...(pnormInteger e1)
+  ~~ esum (normInteger e2) ...(cong esum prf)
+  ~~ eval e2           ..<(pnormInteger e2)
 
 --------------------------------------------------------------------------------
 --          Arithmetics
