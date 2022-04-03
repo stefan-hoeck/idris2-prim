@@ -29,6 +29,7 @@ modules = Algebra.Semigroup
         , Data.Prim.Int64
         , Data.Prim.Int
         , Data.Prim.Integer
+        , Data.Prim.Integer.Extra
         , Data.Prim.Ord
         , Data.Prim.String
         , Data.Trichotomy
