@@ -1,6 +1,6 @@
 module Test.RingLaws
 
-import public Data.Prim.Ring
+import public Algebra.Ring
 import Data.SOP
 import Hedgehog
 

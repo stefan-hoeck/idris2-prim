@@ -13,6 +13,38 @@ functions.
 There is a small [tutorial](src/Documentation.md) explaining
 some of the things possible with this library.
 
+## Total Order
+
+All primitives with the exception of `Double` and `%World`
+come with a total order `<`, so that the following axioms
+hold:
+
+* For all `x`, `y`, exactly one of `x < y`, `x === y`, or
+  `x > y` holds.
+* `<` is transitive.
+
+Module `Data.Prim.Ord` provides interface `Total`, which encapsulates
+these axioms. In addition, it comes with dozens of corollaries following
+from the axioms.
+
+## Commutative Rings
+
+All primitive integrals come with operations for addition,
+negation, and multiplication, which together form a commutative
+ring so that the following axioms hold:
+
+* Addition is commutative and associative.
+* `0` is the neutral element of addition.
+* `negate x` is the additive inverse of `x`.
+* `x - y` is equivalent to `x + negate y`.
+* Multiplication is commutative and associative.
+* `1` is the neutral element of multiplication.
+* Multiplication is distributive with respect to addition.
+
+Module `Data.Prim.Ring` provides interface `RingLaws`, which encapsulates
+these axioms. In addition, many corollaries following from the axioms are
+provided.
+
 ## Supported Idris Versions
 At the moment, this library is being developed against
 the current main branch of the Idris2 project.

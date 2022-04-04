@@ -3,6 +3,8 @@ module Data.Prim.Int32
 import public Control.WellFounded
 import public Data.DPair
 import public Data.Prim.Ord
+import public Algebra.Solver.Ring
+import Syntax.PreorderReasoning
 
 %default total
 
@@ -84,7 +86,7 @@ comp m n = case prim__lt_Int32 m n of
   x => LT (LT unsafeRefl) (ltNotEQ $ LT unsafeRefl) (ltNotGT $ LT unsafeRefl)
 
 export
-Strict Int32 (<) where
+Total Int32 (<) where
   trichotomy   = comp
   transLT p q  = strictLT p $ strictLT q $ LT unsafeRefl
 
@@ -151,6 +153,49 @@ accessGT m = Access $ \n,gt => accessGT (assert_smaller m n)
 export %inline
 [GT] WellFounded Int32 (>) where
   wellFounded = accessGT
+
+--------------------------------------------------------------------------------
+--          Ring Solver
+--------------------------------------------------------------------------------
+
+public export
+record SS32 (as : List Int32) (s : Sum Int32 as) where
+  constructor SS
+  sum   : Sum Int32 as
+  0 prf : esum sum === esum s
+
+public export
+sum32_ : (s : Sum Int32 as) -> SS32 as s
+sum32_ []           = SS [] Refl
+sum32_ (T f p :: y) =
+  let SS sy py = sum32_ y
+   in case f of
+        0 => SS sy (psum0 py)
+        _ => SS (T f p :: sy) (cong ((f * eprod p) +) py)
+
+public export
+norm32 : {as : List Int32} -> Expr Int32 as -> Sum Int32 as
+norm32 e = sum $ sum32_ $ normalize e
+
+0 pnorm32 :  {as : List Int32}
+          -> (e : Expr Int32 as)
+          -> eval e === esum (norm32 e)
+pnorm32 e with (sum32_ $ normalize e)
+  pnorm32 e | SS s32 prf = Calc $
+    |~ eval e
+    ~~ esum (normalize e)  ...(pnormalize e)
+    ~~ esum s32            ..<(prf)
+
+export
+0 solve :  (as : List Int32)
+        -> (e1,e2 : Expr Int32 as)
+        -> (prf : norm32 e1 === norm32 e2)
+        => eval e1 === eval e2
+solve _ e1 e2 = Calc $
+  |~ eval e1
+  ~~ esum (norm32 e1) ...(pnorm32 e1)
+  ~~ esum (norm32 e2) ...(cong esum prf)
+  ~~ eval e2          ..<(pnorm32 e2)
 
 --------------------------------------------------------------------------------
 --          Arithmetics

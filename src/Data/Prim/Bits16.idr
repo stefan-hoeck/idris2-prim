@@ -3,6 +3,8 @@ module Data.Prim.Bits16
 import public Control.WellFounded
 import public Data.DPair
 import public Data.Prim.Ord
+import public Algebra.Solver.Ring
+import Syntax.PreorderReasoning
 
 %default total
 
@@ -84,7 +86,7 @@ comp m n = case prim__lt_Bits16 m n of
   x => LT (LT unsafeRefl) (ltNotEQ $ LT unsafeRefl) (ltNotGT $ LT unsafeRefl)
 
 export
-Strict Bits16 (<) where
+Total Bits16 (<) where
   trichotomy   = comp
   transLT p q  = strictLT p $ strictLT q $ LT unsafeRefl
 
@@ -150,6 +152,49 @@ accessGT m = Access $ \n,gt => accessGT (assert_smaller m n)
 export %inline
 [GT] WellFounded Bits16 (>) where
   wellFounded = accessGT
+
+--------------------------------------------------------------------------------
+--          Ring Solver
+--------------------------------------------------------------------------------
+
+public export
+record SS16 (as : List Bits16) (s : Sum Bits16 as) where
+  constructor SS
+  sum   : Sum Bits16 as
+  0 prf : esum sum === esum s
+
+public export
+sum16_ : (s : Sum Bits16 as) -> SS16 as s
+sum16_ []           = SS [] Refl
+sum16_ (T f p :: y) =
+  let SS sy py = sum16_ y
+   in case f of
+        0 => SS sy (psum0 py)
+        _ => SS (T f p :: sy) (cong ((f * eprod p) +) py)
+
+public export
+norm16 : {as : List Bits16} -> Expr Bits16 as -> Sum Bits16 as
+norm16 e = sum $ sum16_ $ normalize e
+
+0 pnorm16 :  {as : List Bits16}
+          -> (e : Expr Bits16 as)
+          -> eval e === esum (norm16 e)
+pnorm16 e with (sum16_ $ normalize e)
+  pnorm16 e | SS s16 prf = Calc $
+    |~ eval e
+    ~~ esum (normalize e)  ...(pnormalize e)
+    ~~ esum s16            ..<(prf)
+
+export
+0 solve :  (as : List Bits16)
+        -> (e1,e2 : Expr Bits16 as)
+        -> (prf : norm16 e1 === norm16 e2)
+        => eval e1 === eval e2
+solve _ e1 e2 = Calc $
+  |~ eval e1
+  ~~ esum (norm16 e1) ...(pnorm16 e1)
+  ~~ esum (norm16 e2) ...(cong esum prf)
+  ~~ eval e2          ..<(pnorm16 e2)
 
 --------------------------------------------------------------------------------
 --          Arithmetics

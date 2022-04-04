@@ -3,6 +3,8 @@ module Data.Prim.Bits8
 import public Control.WellFounded
 import public Data.DPair
 import public Data.Prim.Ord
+import public Algebra.Solver.Ring
+import Syntax.PreorderReasoning
 
 %default total
 
@@ -84,7 +86,7 @@ comp m n = case prim__lt_Bits8 m n of
   x => LT (LT unsafeRefl) (ltNotEQ $ LT unsafeRefl) (ltNotGT $ LT unsafeRefl)
 
 export
-Strict Bits8 (<) where
+Total Bits8 (<) where
   trichotomy   = comp
   transLT p q  = strictLT p $ strictLT q $ LT unsafeRefl
 
@@ -150,6 +152,49 @@ accessGT m = Access $ \n,gt => accessGT (assert_smaller m n)
 export %inline
 [GT] WellFounded Bits8 (>) where
   wellFounded = accessGT
+
+--------------------------------------------------------------------------------
+--          Ring Solver
+--------------------------------------------------------------------------------
+
+public export
+record SS8 (as : List Bits8) (s : Sum Bits8 as) where
+  constructor SS
+  sum   : Sum Bits8 as
+  0 prf : esum sum === esum s
+
+public export
+sum8_ : (s : Sum Bits8 as) -> SS8 as s
+sum8_ []           = SS [] Refl
+sum8_ (T f p :: y) =
+  let SS sy py = sum8_ y
+   in case f of
+        0 => SS sy (psum0 py)
+        _ => SS (T f p :: sy) (cong ((f * eprod p) +) py)
+
+public export
+norm8 : {as : List Bits8} -> Expr Bits8 as -> Sum Bits8 as
+norm8 e = sum $ sum8_ $ normalize e
+
+0 pnorm8 :  {as : List Bits8}
+          -> (e : Expr Bits8 as)
+          -> eval e === esum (norm8 e)
+pnorm8 e with (sum8_ $ normalize e)
+  pnorm8 e | SS s8 prf = Calc $
+    |~ eval e
+    ~~ esum (normalize e)  ...(pnormalize e)
+    ~~ esum s8            ..<(prf)
+
+export
+0 solve :  (as : List Bits8)
+        -> (e1,e2 : Expr Bits8 as)
+        -> (prf : norm8 e1 === norm8 e2)
+        => eval e1 === eval e2
+solve _ e1 e2 = Calc $
+  |~ eval e1
+  ~~ esum (norm8 e1) ...(pnorm8 e1)
+  ~~ esum (norm8 e2) ...(cong esum prf)
+  ~~ eval e2          ..<(pnorm8 e2)
 
 --------------------------------------------------------------------------------
 --          Arithmetics
