@@ -191,126 +191,15 @@ export
 lawDivMod n d (Left x)  = strictLT x unsafeRefl
 lawDivMod n d (Right x) = strictLT x unsafeRefl
 
--- ----------------------------
--- -- Division
---
--- ||| Safe division.
--- export %inline
--- sdiv : (n,d : Integer) -> (0 prf : d /= 0) => Integer
--- sdiv n d = n `div` d
---
--- ||| Safe modulo.
--- export %inline
--- smod : (n,d : Integer) -> (0 prf : d /= 0) => Integer
--- smod n d = n `mod` d
---
--- ||| For positive `n` and positive `d`, `d * (div n d + 1)` is
--- ||| greater than `n`.
--- export
--- 0 multDivPlusOneGT : (n,d : Integer) -> (0 < d) -> d * (div n d + 1) > n
--- multDivPlusOneGT n d dgt0 =
---   let law = cong (d * div n d + d >) $ lawDivMod n d (Right dgt0)
---    in derive (plusGT (mod n d) d (d * div n d) (snd $ modLT n d dgt0)) $
---         |~ d * div n d + d > d * div n d + mod n d
---         ~~ d * div n d + d   > n ...law
---         ~~ d * (div n d + 1) > n ...(cong (> n) $ multPlusSelf _ _)
---
--- ||| For positive `n` and positive `d`, `d * div n d` is
--- ||| not less than `n`.
--- export
--- 0 multDivLTE : (n,d : Integer) -> (0 < d) -> d * div n d <= n
--- multDivLTE n d dgt0 =
---   let law = lawDivMod n d $ Right dgt0
---    in derive (plusNonNegativeGTE _ _ (fst $ modLT n d dgt0)) $
---         |~ d * div n d <= d * div n d + mod n d
---         ~~ d * div n d <= n ...(cong (d * div n d <=) $ law)
---
--- ||| For non-negative `n` and positive `d`, `div n d` is non-negative.
--- export
--- 0 divNonNegativeGTE0 : (n,d : Integer) -> 0 <= n -> 0 < d -> div n d >= 0
--- divNonNegativeGTE0 n d x y =
---   let gtn = trans_LTE_LT x $ multDivPlusOneGT n d y
---       gt0 = solveMultPosLeftGT0 _ _ y gtn
---    in solvePlusOneRightGT0 _ gt0
---
--- ||| For non-negative `n` and positive `d`, `mod n d <= n` holds.
--- export
--- 0 modNonNegativeLTE : (n,d : Integer) -> 0 <= n -> 0 < d -> mod n d <= n
--- modNonNegativeLTE n d x y =
---   let p1 = solvePlusLeft $ lawDivMod n d $ Right y
---    in ?foo
+----------------------------
+-- Division
 
---
--- ||| For non-negative `n` and positive `d`, `div n d` is not greater
--- ||| than `n`.
--- export
--- 0 divPositiveLTE : (n,d : Integer) -> (0 <= n) -> (0 < d) -> div n d <= n
--- divPositiveLTE n d x y = assert_total $ case comp (div n d) n of
---   LT z _ _ => Left z
---   EQ _ z _ => Right z
---   GT _ _ z => void (EQ_not_GT {lt = (<)} (lawDivMod n d $ Right y) ?fooooooooo)
---
--- export
--- 0 div0 : (d : Integer) -> (0 < d) -> div 0 d === 0
--- div0 d x = assert_total $ case comp (div 0 d) 0 of
---   EQ _ y _ => y
---   GT _ _ y => void (EQ_not_GT (lawDivMod 0 d $ Right x) $ plusPositiveGT0 _ _ (multPosPosGT0 _ _ x y) ?p2)
---   LT y _ _ => ?dd0_0
---
---
--- export
--- 0 mod0 : (n : Integer) -> 0 < n -> mod 0 n === 0
--- mod0 n x =
---   Calc $
---     |~ mod 0 n
---     ~~ 0 - n * div 0 n ...(solvePlusLeft $ lawDivMod 0 n ?fooo)
---     ~~ 0 - n * 0       ...(cong (\x => 0 - n * x) $ div0 n x)
---     ~~ 0 - 0           ...(cong (\x => 0 - x) $ multZeroRightAbsorbs _)
---     ~~ 0               ...(minusSelfZero 0)
+||| Safe division.
+export %inline
+sdiv : (n,d : Integer) -> (0 prf : d /= 0) => Integer
+sdiv n d = n `div` d
 
--- export
--- 0 divGT0 : (m,n : Integer) -> (0 <= m
-
---------------------------------------------------------------------------------
---          Utilities
---------------------------------------------------------------------------------
-
--- public export
--- record Middle (m,n : Integer) where
---   constructor MkMiddle
---   value  : Integer
---   0 isMiddle : value === m + div (n - m) 2
---   0 gtem     : m <= value
---   0 ltn      : n >  value
---
--- export
--- middle : (m,n : Integer) -> (0 prf : m < n) => Middle m n
--- middle m n = MkMiddle {
---     value    = m + div (n - m) 2
---   , isMiddle = Refl
---   , gtem     = ?foo
---   , ltn      = ?bar
---   }
---
--- ||| The square root of a non-negative integer `n` is the
--- ||| unique integer `v` with `v >= 0`, `v * v <= n`,
--- ||| and `(v + 1) * (v + 1) > n`.
--- public export
--- record Sqrt (n : Integer) where
---   constructor MkSqrt
---   value : Integer
---   0 nonNegative : 0 <= value
---   0 ltn         : value * value <= n
---   0 gtn         : (value + 1) * (value + 1) > n
---
--- ||| Computes the integer square root of a non-negative integer
--- ||| using a binary search.
--- export
--- sqrt : (n : Integer) -> (0 prf : 0 <= n) => Sqrt n
--- sqrt n = case comp 0 n of
---   GT _ _ x => void $ LT_not_GTE x prf
---   EQ _ x _ => replace' Sqrt x (MkSqrt 0 %search %search %search)
---   LT x _ _ => case comp 1 n of
---     EQ _ y _ => replace' Sqrt y (MkSqrt 1 %search %search %search)
---     GT _ _ y => void (GT_not_LTE y $ oneAfterZero n x)
---     LT y _ _ => ?foo_0
+||| Safe modulo.
+export %inline
+smod : (n,d : Integer) -> (0 prf : d /= 0) => Integer
+smod n d = n `mod` d

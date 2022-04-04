@@ -845,12 +845,42 @@ divNonNeg ngte0 dpos = App (trans_GT_GTE (multDivP1 dpos) ngte0) $
   <> 1     <= div n d + 1       ... (\_ => oneAfterZero _)
   <> 0     <= div n d           ... solvePlusRightSelf
 
--- 0 modLTE : {n,d : Integer} -> (0 <= n) -> (0 < d) -> mod n d <= n
--- modLTE ngte0 dpos = App (divNonNeg ngte0 dpos) $
---   |> 0               <= div n d
---   <> d * 0           <= d * div n d           ... multPosLeftE dpos
---   <> d * 0 + mod n d <= d * div n d + mod n d ..+ mod n d
---   <> mod n d         <= n                     =.= (
---     solve [d, mod n d] (v d * 0 + v (mod n d)) (v (mod n d))
---   , lawDivMod n d %search
---   )
+export
+0 modLTE : {n,d : Integer} -> (0 <= n) -> (0 < d) -> mod n d <= n
+modLTE ngte0 dpos = App (divNonNeg ngte0 dpos) $
+  |> 0               <= div n d
+  <> d * 0           <= d * div n d           ... multPosLeft dpos
+  <> d * 0 + mod n d <= d * div n d + mod n d ... plusRight
+  <> mod n d         <= n                     =.= (
+       solve [d, mod n d] (v d * 0 + v (mod n d)) (v (mod n d))
+     , lawDivMod n d %search
+     )
+
+export
+0 modOneIsZero : {n : Integer} -> mod n 1 === 0
+modOneIsZero = assert_total $ case comp (mod n 1) 0 of
+  EQ _ p _ => p
+  LT p _ _ => void (LT_not_GTE p $ fst $ modLT n 1 %search)
+  GT _ _ p => void (LT_not_GTE (snd $ modLT n 1 %search) (oneAfterZero _ p))
+
+export
+0 divOneSame : {n : Integer} -> div n 1 === n
+divOneSame = assert_total $ Calc $
+  |~ div n 1
+  ~~ 1 * div n 1           ..<(multOneLeftNeutral _)
+  ~~ 1 * div n 1 + 0       ..<(plusZeroRightNeutral _)
+  ~~ 1 * div n 1 + mod n 1 ..<(cong (1 * div n 1 +) modOneIsZero)
+  ~~ n                     ...(lawDivMod n 1 %search)
+
+export
+0 divGreaterOneLT : {n,d : Integer} -> 0 < n -> 1 < d -> div n d < n
+divGreaterOneLT npos dgt1 =
+  let dpos = the (0 < d) $ trans %search dgt1
+   in assert_total $ case comp 0 (div n d) of
+       EQ _ p _ => replace {p = (< n)} p npos
+       LT p _ _ => App dgt1 $
+         |> 1 < d
+         <> 1 * div n d < d * div n d ... multPosRight p
+         <> div n d     < d * div n d =.. multOneLeftNeutral _
+         <> div n d     < n           ... (\_ => trans_GTE_GT $ multDiv dpos)
+       GT _ _ p => void (LT_not_GTE p $ divNonNeg %search dpos)
