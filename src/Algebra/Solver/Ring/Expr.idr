@@ -11,7 +11,7 @@ import Syntax.PreorderReasoning
 --------------------------------------------------------------------------------
 
 public export
-pow : RingLaws a => a -> Nat -> a
+pow : Ring a => a -> Nat -> a
 pow x 0     = 1
 pow x (S k) = x * pow x k
 
@@ -48,7 +48,7 @@ v : {0 as : List a} -> (x : a) -> Elem x as => Expr a as
 v = var
 
 public export
-eval : RingLaws a => Expr a as -> a
+eval : Ring a => Expr a as -> a
 eval (Lit v)     = v
 eval (Var x y)   = x
 eval (Neg v)     = neg $ eval v
@@ -61,12 +61,12 @@ eval (Minus x y) = eval x - eval y
 --------------------------------------------------------------------------------
 
 export
-0 ppow : RingLaws a
+0 ppow : Ring a
        => (m,n : Nat)
        -> (x   : a)
        -> pow x (m + n) === pow x m * pow x n
-ppow 0     n x = sym $ multOneLeftNeutral _
+ppow 0     n x = sym multOneLeftNeutral
 ppow (S k) n x = Calc $
   |~ x * pow x (plus k n)
-  ~~ x * (pow x k * pow x n) ...(cong (x*) $ ppow k n x)
-  ~~ (x * pow x k) * pow x n ...(multAssociative _ _ _)
+  ~~ x * (pow x k * pow x n) ... cong (x*) (ppow k n x)
+  ~~ (x * pow x k) * pow x n ... multAssociative
