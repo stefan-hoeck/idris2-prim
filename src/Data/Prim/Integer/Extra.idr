@@ -20,13 +20,13 @@ infix  1  ~.., ..~, ~.~
 export
 0 pairPlusCommutative :  {w,x,y,z : Integer}
                       -> (w + x === x + w, y + z === z + y)
-pairPlusCommutative = (plusCommutative w x, plusCommutative y z)
+pairPlusCommutative = (plusCommutative, plusCommutative)
 
 ||| Allows us to commute multiplication on both sides of an inequality.
 export
 0 pairMultCommutative :  {w,x,y,z : Integer}
                       -> (w * x === x * w, y * z === z * y)
-pairMultCommutative = (multCommutative w x, multCommutative y z)
+pairMultCommutative = (multCommutative, multCommutative)
 
 --------------------------------------------------------------------------------
 --          Syntax for deriving (in)equalities
@@ -160,7 +160,7 @@ export
 minus r =
   |> rel r x y
   <> rel r (x + neg z) (y + neg z) ... plusRight
-  <> rel r (x - z) (y - z)         ~.~ (minusIsPlusNeg _ _, minusIsPlusNeg _ _)
+  <> rel r (x - z) (y - z)         ~.~ (minusIsPlusNeg, minusIsPlusNeg)
 
 ||| We can solve (in)equalities, where the same value has
 ||| been added on both sides.
@@ -253,7 +253,7 @@ export
                      -> r 0 x
 solvePlusRightSelf r =
   |> rel r y (x + y)
-  <> rel r (0 + y) (x + y) ~.. plusZeroLeftNeutral y
+  <> rel r (0 + y) (x + y) ~.. plusZeroLeftNeutral
   <> rel r 0 x             ... solvePlusRight
 
 ||| We can solve (in)equalities, with one side an addition
@@ -270,7 +270,7 @@ export
                      -> r (neg x) y
 solvePlusLeftZero r =
   |> rel r 0 (x + y)
-  <> rel r 0 (y + x)  ..= plusCommutative x y
+  <> rel r 0 (y + x)  ..= plusCommutative
   <> rel r (neg x) y  ... solvePlusRightZero
 
 ||| We can solve (in)equalities, with one side an addition
@@ -287,7 +287,7 @@ export
                     -> r 0 y
 solvePlusLeftSelf r =
   |> rel r x (x + y)
-  <> rel r (x + 0) (x + y) ~.. plusZeroRightNeutral x
+  <> rel r (x + 0) (x + y) ~.. plusZeroRightNeutral
   <> rel r 0 y             ... solvePlusLeft
 
 ||| We can solve (in)equalities, with one side a subtraction
@@ -341,10 +341,7 @@ export
 negateNeg r =
   |> rel r (neg x) (neg y)
   <> rel r (neg $ neg y) (neg $ neg x) ... negate
-  <> rel r y x                         =.= (
-       negInvolutory y
-     , negInvolutory x
-     )
+  <> rel r y x                         =.= (negInvolutory, negInvolutory)
 
 ||| `negate` specialized to where one side equals zero.
 |||
@@ -381,7 +378,7 @@ export
 negateNegZero r =
   |> rel r 0             (neg x)
   <> rel r (neg (neg x)) (neg 0) ... negate
-  <> rel r x 0                   =.= (negInvolutory x, negZero)
+  <> rel r x 0                   =.= (negInvolutory, negZero)
 
 --------------------------------------------------------------------------------
 --          Multiplication in Inequalities
@@ -394,7 +391,7 @@ negateNegZero r =
 mplLemma p =
   |> x         < y
   <> x - x     < y - x               ... minus
-  <> 0         < y - x               =.. (minusSelfZero x)
+  <> 0         < y - x               =.. minusSelfZero
   <> 0         < z * (y - x)         ... (\_ => multPosPosGT0 _ _ p)
   <> 0 + z * x < z * (y - x) + z * x ... plusRight
   <> z * x     < z * y               =.= (
@@ -502,8 +499,8 @@ multNegRight p r =
 lemmaMult0 prf = Calc $
   |~ x * z
   ~~ x * 0 ..< cong (x *) prf
-  ~~ 0     ... multZeroRightAbsorbs _
-  ~~ y * 0 ..< multZeroRightAbsorbs _
+  ~~ 0     ... multZeroRightAbsorbs
+  ~~ y * 0 ..< multZeroRightAbsorbs
   ~~ y * z ... cong (y *) prf
 
 ||| Multiplication with a non-negative number weakens an inequality.
@@ -679,7 +676,7 @@ export
                         -> r 0 x
 solveMultPosRightZero pos r =
   |> rel r 0 (x * y)
-  <> rel r (0 * y) (x * y) ~.. multZeroLeftAbsorbs y
+  <> rel r (0 * y) (x * y) ~.. multZeroLeftAbsorbs
   <> rel r 0 x             ... solveMultPosRight pos
 
 ||| We can solve (in)equalities, with one side a multiplication
@@ -697,7 +694,7 @@ export
                         -> r x 0
 solveMultNegRightZero neg r =
   |> rel r 0 (x * y)
-  <> rel r (0 * y) (x * y) ~.. multZeroLeftAbsorbs y
+  <> rel r (0 * y) (x * y) ~.. multZeroLeftAbsorbs
   <> rel r x 0             ... solveMultNegRight neg
 
 ||| We can solve (in)equalities, with one side a multiplication
@@ -715,7 +712,7 @@ export
                         -> r 0 y
 solveMultPosLeftZero pos r =
   |> rel r 0 (x * y)
-  <> rel r (x * 0) (x * y) ~.. multZeroRightAbsorbs x
+  <> rel r (x * 0) (x * y) ~.. multZeroRightAbsorbs
   <> rel r 0 y             ... solveMultPosLeft pos
 
 ||| We can solve (in)equalities, with one side a multiplication
@@ -733,7 +730,7 @@ export
                         -> r y 0
 solveMultNegLeftZero neg r =
   |> rel r 0 (x * y)
-  <> rel r (x * 0) (x * y) ~.. multZeroRightAbsorbs x
+  <> rel r (x * 0) (x * y) ~.. multZeroRightAbsorbs
   <> rel r y 0             ... solveMultNegLeft neg
 
 ||| We can solve (in)equalities, with one side a multiplication
@@ -752,7 +749,7 @@ export
                         -> r 1 x
 solveMultPosRightSelf pos r =
   |> rel r y (x * y)
-  <> rel r (1 * y) (x * y) ~.. multOneLeftNeutral y
+  <> rel r (1 * y) (x * y) ~.. multOneLeftNeutral
   <> rel r 1 x             ... solveMultPosRight pos
 
 ||| We can solve (in)equalities, with one side a multiplication
@@ -771,7 +768,7 @@ export
                        -> r 1 y
 solveMultPosLeftSelf pos r =
   |> rel r x (x * y)
-  <> rel r (x * 1) (x * y) ~.. multOneRightNeutral x
+  <> rel r (x * 1) (x * y) ~.. multOneRightNeutral
   <> rel r 1 y             ... solveMultPosLeft pos
 
 ||| We can solve (in)equalities, with one side a multiplication
@@ -790,7 +787,7 @@ export
                         -> r x 1
 solveMultNegRightSelf neg r =
   |> rel r y (x * y)
-  <> rel r (1 * y) (x * y) ~.. multOneLeftNeutral y
+  <> rel r (1 * y) (x * y) ~.. multOneLeftNeutral
   <> rel r x 1             ... solveMultNegRight neg
 
 ||| We can solve (in)equalities, with one side a multiplication
@@ -809,7 +806,7 @@ export
                         -> r y 1
 solveMultNegLeftSelf neg r =
   |> rel r x (x * y)
-  <> rel r (x * 1) (x * y) ~.. multOneRightNeutral x
+  <> rel r (x * 1) (x * y) ~.. multOneRightNeutral
   <> rel r y 1             ... solveMultNegLeft neg
 
 --------------------------------------------------------------------------------
@@ -833,7 +830,7 @@ multDiv dpos = App (fst $ modLT n d dpos) $
   |> 0 <= mod n d
   <> d * div n d + 0 <= d * div n d + mod n d ... plusLeft
   <> d * div n d     <= n                     =.= (
-       plusZeroRightNeutral _
+       plusZeroRightNeutral
      , lawDivMod n d %search
      )
 
@@ -867,10 +864,10 @@ export
 0 divOneSame : {n : Integer} -> div n 1 === n
 divOneSame = assert_total $ Calc $
   |~ div n 1
-  ~~ 1 * div n 1           ..<(multOneLeftNeutral _)
-  ~~ 1 * div n 1 + 0       ..<(plusZeroRightNeutral _)
-  ~~ 1 * div n 1 + mod n 1 ..<(cong (1 * div n 1 +) modOneIsZero)
-  ~~ n                     ...(lawDivMod n 1 %search)
+  ~~ 1 * div n 1           ..< multOneLeftNeutral
+  ~~ 1 * div n 1 + 0       ..< plusZeroRightNeutral
+  ~~ 1 * div n 1 + mod n 1 ..< cong (1 * div n 1 +) modOneIsZero
+  ~~ n                     ... lawDivMod n 1 %search
 
 export
 0 divGreaterOneLT : {n,d : Integer} -> 0 < n -> 1 < d -> div n d < n
@@ -881,6 +878,6 @@ divGreaterOneLT npos dgt1 =
        LT p _ _ => App dgt1 $
          |> 1 < d
          <> 1 * div n d < d * div n d ... multPosRight p
-         <> div n d     < d * div n d =.. multOneLeftNeutral _
+         <> div n d     < d * div n d =.. multOneLeftNeutral
          <> div n d     < n           ... (\_ => trans_GTE_GT $ multDiv dpos)
        GT _ _ p => void (LT_not_GTE p $ divNonNeg %search dpos)
