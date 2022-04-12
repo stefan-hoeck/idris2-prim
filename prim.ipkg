@@ -13,6 +13,9 @@ modules = Algebra.Semigroup
         , Algebra.Monoid
         , Algebra.Ring
 
+        , Algebra.Solver.CommutativeMonoid
+        , Algebra.Solver.Monoid
+        , Algebra.Solver.Prod
         , Algebra.Solver.Ring
         , Algebra.Solver.Ring.Expr
         , Algebra.Solver.Ring.Prod

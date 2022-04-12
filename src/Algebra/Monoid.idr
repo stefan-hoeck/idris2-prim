@@ -21,6 +21,15 @@ LMonoid (List a) where
   appendRightNeutral = appendNilRightNeutral _
   appendLeftNeutral = Refl
 
+unsafeRefl : a === b
+unsafeRefl = believe_me (Refl {x = a})
+
+export
+LMonoid String where
+  appendAssociative = unsafeRefl
+  appendRightNeutral = unsafeRefl
+  appendLeftNeutral = unsafeRefl
+
 ||| This interface is a witness that for a
 ||| type `a` the axioms of a commutative monoid hold:
 ||| `(<+>)` is commutative.
