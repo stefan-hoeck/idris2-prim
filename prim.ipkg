@@ -12,11 +12,13 @@ modules = Algebra.Semigroup
         , Algebra.Semiring
         , Algebra.Monoid
         , Algebra.Ring
+
         , Algebra.Solver.Ring
         , Algebra.Solver.Ring.Expr
         , Algebra.Solver.Ring.Prod
         , Algebra.Solver.Ring.Sum
         , Algebra.Solver.Ring.Util
+        , Algebra.Solver.Semigroup
 
         , Data.Prim
         , Data.Prim.Char
