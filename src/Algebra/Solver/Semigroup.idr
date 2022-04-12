@@ -68,6 +68,10 @@ pnorm (Append x y) = Calc $
   ~~ esum (normalize x ++ normalize y)
      ..< psum (normalize x) (normalize y)
 
+--------------------------------------------------------------------------------
+--          Solver
+--------------------------------------------------------------------------------
+
 export
 0 solve :  LSemigroup a
         => (e1,e2 : Expr a)
