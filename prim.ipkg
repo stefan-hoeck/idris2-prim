@@ -19,6 +19,7 @@ modules = Algebra.Semigroup
         , Algebra.Solver.Ring
         , Algebra.Solver.Ring.Expr
         , Algebra.Solver.Ring.Prod
+        , Algebra.Solver.Ring.SolvableRing
         , Algebra.Solver.Ring.Sum
         , Algebra.Solver.Ring.Util
         , Algebra.Solver.Semigroup

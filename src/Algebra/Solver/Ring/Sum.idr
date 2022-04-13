@@ -2,6 +2,7 @@ module Algebra.Solver.Ring.Sum
 
 import Algebra.Solver.Ring.Expr
 import Algebra.Solver.Ring.Prod
+import Algebra.Solver.Ring.SolvableRing
 import Algebra.Solver.Ring.Util
 
 %default total
@@ -41,7 +42,7 @@ negate (x :: y) = negTerm x :: negate y
 --------------------------------------------------------------------------------
 
 public export
-add : Num a => Sum a as -> Sum a as -> Sum a as
+add : SolvableRing a => Sum a as -> Sum a as -> Sum a as
 add []        ys                = ys
 add xs        []                = xs
 add (T m x :: xs) (T n y :: ys) = case compProd x y of
@@ -50,30 +51,42 @@ add (T m x :: xs) (T n y :: ys) = case compProd x y of
   EQ => T (m + n) y :: add xs ys
 
 public export
-mult1 : Num a => Term a as -> Sum a as -> Sum a as
+normSum : SolvableRing a => Sum a as -> Sum a as
+normSum []           = []
+normSum (T f p :: y) = case isZero f of
+  Just refl => normSum y
+  Nothing   => T f p :: normSum y
+
+public export
+mult1 : SolvableRing a => Term a as -> Sum a as -> Sum a as
 mult1 (T f p) (T g q :: xs) = T (f * g) (merge p q) :: mult1 (T f p) xs
 mult1 _       []            = []
 
 public export
-mult : Num a => Sum a as -> Sum a as -> Sum a as
+mult : SolvableRing a => Sum a as -> Sum a as -> Sum a as
 mult []        ys = []
 mult (x :: xs) ys = add (mult1 x ys) (mult xs ys)
 
 public export
-normalize : Ring a => {as : List a} -> Expr a as -> Sum a as
-normalize (Lit n)     = [T n one]
-normalize (Var x y)   = [T 1 $ fromVar y]
-normalize (Neg x)     = negate $ normalize x
-normalize (Plus x y)  = add (normalize x) (normalize y)
-normalize (Mult x y)  = mult (normalize x) (normalize y)
-normalize (Minus x y) = add (normalize x) (negate $ normalize y)
+norm : SolvableRing a => {as : List a} -> Expr a as -> Sum a as
+norm (Lit n)     = [T n one]
+norm (Var x y)   = [T 1 $ fromVar y]
+norm (Neg x)     = negate $ norm x
+norm (Plus x y)  = add (norm x) (norm y)
+norm (Mult x y)  = mult (norm x) (norm y)
+norm (Minus x y) = add (norm x) (negate $ norm y)
+
+public export
+normalize : SolvableRing a => {as : List a} -> Expr a as -> Sum a as
+normalize e = normSum (norm e)
 
 --------------------------------------------------------------------------------
 --          Proofs
 --------------------------------------------------------------------------------
 
-export
-0 padd : Ring a => (x,y : Sum a as) -> esum x + esum y === esum (add x y)
+0 padd :  SolvableRing a
+       => (x,y : Sum a as)
+       -> esum x + esum y === esum (add x y)
 padd []            xs = plusZeroLeftNeutral
 padd (x :: xs)     [] = plusZeroRightNeutral
 padd (T m x :: xs) (T n y :: ys) with (compProd x y) proof eq
@@ -92,17 +105,16 @@ padd (T m x :: xs) (T n y :: ys) with (compProd x y) proof eq
        ... cong (n * eprod y +) (padd (T m x :: xs) ys)
 
   _ | EQ = case pcompProd x y eq of
-    Refl => Calc $
-      |~ (m * eprod x + esum xs) + (n * eprod x + esum ys)
-      ~~ (m * eprod x + n * eprod x) + (esum xs + esum ys)
-         ... p1324
-      ~~ (m + n) * eprod x + (esum xs + esum ys)
-         ..< cong (+ (esum xs + esum ys)) rightDistributive
-      ~~ (m + n) * eprod x + esum (add xs ys)
-         ... cong ((m + n) * eprod x +) (padd xs ys)
+        Refl => Calc $
+          |~ (m * eprod x + esum xs) + (n * eprod x + esum ys)
+          ~~ (m * eprod x + n * eprod x) + (esum xs + esum ys)
+             ... p1324
+          ~~ (m + n) * eprod x + (esum xs + esum ys)
+             ..< cong (+ (esum xs + esum ys)) rightDistributive
+          ~~ (m + n) * eprod x + esum (add xs ys)
+             ... cong ((m + n) * eprod x +) (padd xs ys)
 
-export
-0 psum0 :  Ring a
+0 psum0 :  SolvableRing a
         => {x,y,z : a}
         -> x === y
         -> x === 0 * z + y
@@ -112,8 +124,7 @@ psum0 prf = Calc $
   ~~ 0 + y      ..< plusZeroLeftNeutral
   ~~ 0 * z + y  ..< cong (+ y) multZeroLeftAbsorbs
 
-export
-0 pmult1 :  Ring a
+0 pmult1 :  SolvableRing a
          => (m : a)
          -> (p : Prod a as)
          -> (s : Sum a as)
@@ -130,8 +141,9 @@ pmult1 m p (T n q :: xs) = Calc $
   ~~ (m * eprod p) * (n * eprod q + esum xs)
      ..< leftDistributive
 
-export
-0 pmult : Ring a => (x,y : Sum a as) -> esum x * esum y === esum (mult x y)
+0 pmult :  SolvableRing a
+        => (x,y : Sum a as)
+        -> esum x * esum y === esum (mult x y)
 pmult []            y = multZeroLeftAbsorbs
 pmult (T n x :: xs) y = Calc $
   |~ (n * eprod x + esum xs) * esum y
@@ -144,14 +156,14 @@ pmult (T n x :: xs) y = Calc $
   ~~ esum (add (mult1 (T n x) y) (mult xs y))
      ... padd (mult1 (T n x) y) (mult xs y)
 
-export
-0 pnegTerm :  Ring a
+0 pnegTerm :  SolvableRing a
            => (x : Term a as)
            -> eterm (negTerm x) === neg (eterm x)
 pnegTerm (T f p) = multNegLeft
 
-export
-0 pneg : Ring a => (x : Sum a as) -> esum (negate x) === neg (esum x)
+0 pneg :  SolvableRing a
+       => (x : Sum a as)
+       -> esum (negate x) === neg (esum x)
 pneg []       = sym $ negZero
 pneg (x :: y) = Calc $
   |~ eterm (negTerm x) + esum (negate y)
@@ -159,52 +171,110 @@ pneg (x :: y) = Calc $
   ~~ neg (eterm x) + neg (esum y)    ... cong (neg (eterm x) +) (pneg y)
   ~~ neg (eterm x + esum y)          ..< negDistributes
 
-export
-0 pnormalize : Ring a => (e : Expr a as) -> eval e === esum (normalize e)
-pnormalize (Lit n)    = Calc $
+0 pnormSum :  SolvableRing a
+           => (s : Sum a as)
+           -> esum (normSum s) === esum s
+pnormSum []           = Refl
+pnormSum (T f p :: y) with (isZero f)
+  _ | Nothing   = Calc $
+    |~ f * eprod p + esum (normSum y)
+    ~~ f * eprod p + esum y ... cong ((f * eprod p) +) (pnormSum y)
+
+  _ | Just refl = Calc $
+    |~ esum (normSum y)
+    ~~ esum y               ... pnormSum y
+    ~~ 0 + esum y           ..< plusZeroLeftNeutral
+    ~~ 0 * eprod p + esum y ..< cong (+ esum y) multZeroLeftAbsorbs
+    ~~ f * eprod p + esum y ..< cong (\x => x * eprod p + esum y) refl
+
+0 pnorm :  SolvableRing a
+        => (e : Expr a as)
+        -> eval e === esum (norm e)
+pnorm (Lit n)    = Calc $
   |~ n
   ~~ n * 1                    ..< multOneRightNeutral
   ~~ n * eprod (one {as})     ..< cong (n *) (pone as)
   ~~ n * eprod (one {as}) + 0 ..< plusZeroRightNeutral
 
-pnormalize (Var x y)  = Calc $
+pnorm (Var x y)  = Calc $
   |~ x
   ~~ eprod (fromVar y)          ..< pvar as y
   ~~ 1 * eprod (fromVar y)      ..< multOneLeftNeutral
   ~~ 1 * eprod (fromVar y) + 0  ..< plusZeroRightNeutral
 
-pnormalize (Neg x) = Calc $
+pnorm (Neg x) = Calc $
   |~ neg (eval x)
-  ~~ neg (esum (normalize x))    ... cong neg (pnormalize x)
-  ~~ esum (negate (normalize x)) ..< pneg (normalize x)
+  ~~ neg (esum (norm x))    ... cong neg (pnorm x)
+  ~~ esum (negate (norm x)) ..< pneg (norm x)
 
-pnormalize (Plus x y) = Calc $
+pnorm (Plus x y) = Calc $
   |~ eval x + eval y
-  ~~ esum (normalize x) + eval y
-     ... cong (+ eval y) (pnormalize x)
-  ~~ esum (normalize x) + esum (normalize y)
-     ... cong (esum (normalize x) +) (pnormalize y)
-  ~~ esum (add (normalize x) (normalize y))
+  ~~ esum (norm x) + eval y
+     ... cong (+ eval y) (pnorm x)
+  ~~ esum (norm x) + esum (norm y)
+     ... cong (esum (norm x) +) (pnorm y)
+  ~~ esum (add (norm x) (norm y))
      ... padd _ _
 
-pnormalize (Mult x y) = Calc $
+pnorm (Mult x y) = Calc $
   |~ eval x * eval y
-  ~~ esum (normalize x) * eval y
-     ... cong (* eval y) (pnormalize x)
-  ~~ esum (normalize x) * esum (normalize y)
-     ... cong (esum (normalize x) *) (pnormalize y)
-  ~~ esum (mult (normalize x) (normalize y))
+  ~~ esum (norm x) * eval y
+     ... cong (* eval y) (pnorm x)
+  ~~ esum (norm x) * esum (norm y)
+     ... cong (esum (norm x) *) (pnorm y)
+  ~~ esum (mult (norm x) (norm y))
      ... pmult _ _
 
-pnormalize (Minus x y) = Calc $
+pnorm (Minus x y) = Calc $
   |~ eval x - eval y
   ~~ eval x + neg (eval y)
      ... minusIsPlusNeg
-  ~~ esum (normalize x) + neg (eval y)
-     ... cong (+ neg (eval y)) (pnormalize x)
-  ~~ esum (normalize x) + neg (esum (normalize y))
-     ... cong (\v => esum (normalize x) + neg v) (pnormalize y)
-  ~~ esum (normalize x) + esum (negate (normalize y))
-     ..< cong (esum (normalize x) +) (pneg (normalize y))
-  ~~ esum (add (normalize x) (negate (normalize y)))
+  ~~ esum (norm x) + neg (eval y)
+     ... cong (+ neg (eval y)) (pnorm x)
+  ~~ esum (norm x) + neg (esum (norm y))
+     ... cong (\v => esum (norm x) + neg v) (pnorm y)
+  ~~ esum (norm x) + esum (negate (norm y))
+     ..< cong (esum (norm x) +) (pneg (norm y))
+  ~~ esum (add (norm x) (negate (norm y)))
      ... padd _ _
+
+0 pnormalize :  SolvableRing a
+             => (e : Expr a as)
+             -> eval e === esum (normalize e)
+pnormalize e = Calc $
+  |~ eval e
+  ~~ esum (norm e)           ... pnorm e
+  ~~ esum (normSum (norm e)) ..< pnormSum (norm e)
+
+--------------------------------------------------------------------------------
+--          Solver
+--------------------------------------------------------------------------------
+
+export
+0 solve :  SolvableRing a
+        => (as : List a)
+        -> (e1,e2 : Expr a as)
+        -> (prf : normalize e1 === normalize e2)
+        => eval e1 === eval e2
+solve _ e1 e2 = Calc $
+  |~ eval e1
+  ~~ esum (normalize e1) ...(pnormalize e1)
+  ~~ esum (normalize e2) ...(cong esum prf)
+  ~~ eval e2             ..<(pnormalize e2)
+
+--------------------------------------------------------------------------------
+--          Examples
+--------------------------------------------------------------------------------
+
+0 binom1 : {x,y : Bits8} -> (x + y) * (x + y) === x * x + 2 * x * y + y * y
+binom1 = solve [x,y]
+               ((x .+. y) * (x .+. y))
+               (x .*. x + 2 *. x *. y + y .*. y)
+
+0 binom2 : {x,y : Bits8} -> (x - y) * (x - y) === x * x - 2 * x * y + y * y
+binom2 = solve [x,y]
+               ((x .-. y) * (x .-. y))
+               (x .*. x - 2 *. x *. y + y .*. y)
+
+0 binom3 : {x,y : Bits8} -> (x + y) * (x - y) === x * x - y * y
+binom3 = solve [x,y] ((x .+. y) * (x .-. y)) (x .*. x - y .*. y)
