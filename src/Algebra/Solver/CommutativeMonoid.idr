@@ -41,15 +41,15 @@ record Term (a : Type) (as : List a) where
   prod   : Prod a as
 
 public export
-merge : CommutativeMonoid a => Term a as -> Term a as -> Term a as
-merge (T f1 p1) (T f2 p2) = T (f1 <+> f2) (merge p1 p2)
+append : CommutativeMonoid a => Term a as -> Term a as -> Term a as
+append (T f1 p1) (T f2 p2) = T (f1 <+> f2) (mult p1 p2)
 
 public export
 normalize : CommutativeMonoid a => {as : List a} -> Expr a as -> Term a as
 normalize (Lit x)      = T x one
 normalize (Var x y)    = T neutral (fromVar y)
 normalize Neutral      = T neutral one
-normalize (Append x y) = merge (normalize x) (normalize y)
+normalize (Append x y) = append (normalize x) (normalize y)
 
 --------------------------------------------------------------------------------
 --          Evaluation
@@ -127,25 +127,25 @@ ptimes (S k) n x = Calc $
 
 0 ppm :  CommutativeMonoid a
       => (e1,e2 : Prod a as)
-      -> eprod e1 <+> eprod e2 === eprod (merge e1 e2)
+      -> eprod e1 <+> eprod e2 === eprod (mult e1 e2)
 ppm []        []        = appendRightNeutral
 ppm {as = v :: vs} (m :: xs) (n :: ys) = Calc $
   |~ (times m v <+> eprod xs) <+> (times n v <+> eprod ys)
   ~~ (times m v <+> times n v) <+> (eprod xs <+> eprod ys)
      ... p1324
-  ~~ (times m v <+> times n v) <+> eprod (merge xs ys)
+  ~~ (times m v <+> times n v) <+> eprod (mult xs ys)
      ... cong ((times m v <+> times n v) <+>) (ppm xs ys)
-  ~~ times (m + n) v <+> eprod (merge xs ys)
-     ... cong (<+> eprod (merge xs ys)) (ptimes m n v)
+  ~~ times (m + n) v <+> eprod (mult xs ys)
+     ... cong (<+> eprod (mult xs ys)) (ptimes m n v)
 
 
-0 pmerge :  CommutativeMonoid a
-         => (e1,e2 : Term a as)
-         -> eterm e1 <+> eterm e2 === eterm (merge e1 e2)
-pmerge (T f p) (T g q) = Calc $
+0 pappend :  CommutativeMonoid a
+          => (e1,e2 : Term a as)
+          -> eterm e1 <+> eterm e2 === eterm (append e1 e2)
+pappend (T f p) (T g q) = Calc $
   |~ (f <+> eprod p) <+> (g <+> eprod q)
   ~~ (f <+> g) <+> (eprod p <+> eprod q) ... p1324
-  ~~ (f <+> g) <+> eprod (merge p q)     ... cong ((f <+> g) <+>) (ppm p q)
+  ~~ (f <+> g) <+> eprod (mult p q)      ... cong ((f <+> g) <+>) (ppm p q)
 
 0 pnorm :  CommutativeMonoid a
         => (e : Expr a as)
@@ -171,8 +171,8 @@ pnorm (Append x y) = Calc $
      ... cong (<+> eval y) (pnorm x)
   ~~ eterm (normalize x) <+> eterm (normalize y)
      ... cong (eterm (normalize x) <+>) (pnorm y)
-  ~~ eterm (merge (normalize x) (normalize y))
-     ... pmerge (normalize x) (normalize y)
+  ~~ eterm (append (normalize x) (normalize y))
+     ... pappend (normalize x) (normalize y)
 
 --------------------------------------------------------------------------------
 --          Solver

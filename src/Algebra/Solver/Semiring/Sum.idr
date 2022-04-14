@@ -1,9 +1,9 @@
-module Algebra.Solver.Ring.Sum
+module Algebra.Solver.Semiring.Sum
 
-import Algebra.Solver.Ring.Expr
-import Algebra.Solver.Ring.Prod
-import Algebra.Solver.Ring.SolvableRing
-import Algebra.Solver.Ring.Util
+import Algebra.Solver.Semiring.Expr
+import Algebra.Solver.Semiring.Prod
+import Algebra.Solver.Semiring.SolvableSemiring
+import Algebra.Solver.Semiring.Util
 
 %default total
 
@@ -20,13 +20,8 @@ record Term (a : Type) (as : List a) where
 
 ||| Evaluate a term.
 public export
-eterm : Ring a => {as : List a} -> Term a as -> a
+eterm : Semiring a => {as : List a} -> Term a as -> a
 eterm (T f p) = f * eprod p
-
-||| Negate a term.
-public export
-negTerm : Ring a => Term a as -> Term a as
-negTerm (T f p) = T (negate f) p
 
 ||| Normalized arithmetic expression in a commutative
 ||| ring (represented as an (ordered) sum of terms).
@@ -37,16 +32,9 @@ data Sum : (a : Type) -> (as : List a) -> Type where
 
 ||| Evaluate a sum of terms.
 public export
-esum : Ring a => {as : List a} -> Sum a as -> a
+esum : Semiring a => {as : List a} -> Sum a as -> a
 esum []        = 0
 esum (x :: xs) = eterm x + esum xs
-
-||| Negate a sum of terms.
-public export
-negate : Ring a => Sum a as -> Sum a as
-negate []       = []
-negate (x :: y) = negTerm x :: negate y
-
 
 --------------------------------------------------------------------------------
 --          Normalizer
@@ -58,7 +46,7 @@ negate (x :: y) = negTerm x :: negate y
 ||| products of variables, they will be unified by adding their
 ||| factors.
 public export
-add : SolvableRing a => Sum a as -> Sum a as -> Sum a as
+add : SolvableSemiring a => Sum a as -> Sum a as -> Sum a as
 add []        ys                = ys
 add xs        []                = xs
 add (T m x :: xs) (T n y :: ys) = case compProd x y of
@@ -69,7 +57,7 @@ add (T m x :: xs) (T n y :: ys) = case compProd x y of
 ||| Normalize a sum of terms by removing all terms with a
 ||| `zero` factor.
 public export
-normSum : SolvableRing a => Sum a as -> Sum a as
+normSum : SolvableSemiring a => Sum a as -> Sum a as
 normSum []           = []
 normSum (T f p :: y) = case isZero f of
   Just refl => normSum y
@@ -77,29 +65,27 @@ normSum (T f p :: y) = case isZero f of
 
 ||| Multiplies a single term with a sum of terms.
 public export
-mult1 : SolvableRing a => Term a as -> Sum a as -> Sum a as
+mult1 : SolvableSemiring a => Term a as -> Sum a as -> Sum a as
 mult1 (T f p) (T g q :: xs) = T (f * g) (mult p q) :: mult1 (T f p) xs
 mult1 _       []            = []
 
 ||| Multiplies two sums of terms.
 public export
-mult : SolvableRing a => Sum a as -> Sum a as -> Sum a as
+mult : SolvableSemiring a => Sum a as -> Sum a as -> Sum a as
 mult []        ys = []
 mult (x :: xs) ys = add (mult1 x ys) (mult xs ys)
 
 ||| Normalizes an arithmetic expression to a sum of products.
 public export
-norm : SolvableRing a => {as : List a} -> Expr a as -> Sum a as
+norm : SolvableSemiring a => {as : List a} -> Expr a as -> Sum a as
 norm (Lit n)     = [T n one]
 norm (Var x y)   = [T 1 $ fromVar y]
-norm (Neg x)     = negate $ norm x
 norm (Plus x y)  = add (norm x) (norm y)
 norm (Mult x y)  = mult (norm x) (norm y)
-norm (Minus x y) = add (norm x) (negate $ norm y)
 
 ||| Like `norm` but removes all `zero` terms.
 public export
-normalize : SolvableRing a => {as : List a} -> Expr a as -> Sum a as
+normalize : SolvableSemiring a => {as : List a} -> Expr a as -> Sum a as
 normalize e = normSum (norm e)
 
 --------------------------------------------------------------------------------
@@ -107,7 +93,7 @@ normalize e = normSum (norm e)
 --------------------------------------------------------------------------------
 
 -- Adding two sums via `add` preserves the evaluation result.
-0 padd :  SolvableRing a
+0 padd :  SolvableSemiring a
        => (x,y : Sum a as)
        -> esum x + esum y === esum (add x y)
 padd []            xs = plusZeroLeftNeutral
@@ -138,7 +124,7 @@ padd (T m x :: xs) (T n y :: ys) with (compProd x y) proof eq
              ... cong ((m + n) * eprod x +) (padd xs ys)
 
 -- Small utility lemma
-0 psum0 :  SolvableRing a
+0 psum0 :  SolvableSemiring a
         => {x,y,z : a}
         -> x === y
         -> x === 0 * z + y
@@ -149,7 +135,7 @@ psum0 prf = Calc $
   ~~ 0 * z + y  ..< cong (+ y) multZeroLeftAbsorbs
 
 -- Multiplying a sum with a term preserves the evaluation result.
-0 pmult1 :  SolvableRing a
+0 pmult1 :  SolvableSemiring a
          => (m : a)
          -> (p : Prod a as)
          -> (s : Sum a as)
@@ -167,7 +153,7 @@ pmult1 m p (T n q :: xs) = Calc $
      ..< leftDistributive
 
 -- Multiplying two sums of terms preserves the evaluation result.
-0 pmult :  SolvableRing a
+0 pmult :  SolvableSemiring a
         => (x,y : Sum a as)
         -> esum x * esum y === esum (mult x y)
 pmult []            y = multZeroLeftAbsorbs
@@ -182,28 +168,9 @@ pmult (T n x :: xs) y = Calc $
   ~~ esum (add (mult1 (T n x) y) (mult xs y))
      ... padd (mult1 (T n x) y) (mult xs y)
 
--- Evaluating a negated term is equivalent to negate the
--- result of evaluating the term.
-0 pnegTerm :  SolvableRing a
-           => (x : Term a as)
-           -> eterm (negTerm x) === neg (eterm x)
-pnegTerm (T f p) = multNegLeft
-
--- Evaluating a negated sum of terms is equivalent to negate the
--- result of evaluating the sum of terms.
-0 pneg :  SolvableRing a
-       => (x : Sum a as)
-       -> esum (negate x) === neg (esum x)
-pneg []       = sym $ negZero
-pneg (x :: y) = Calc $
-  |~ eterm (negTerm x) + esum (negate y)
-  ~~ neg (eterm x) + esum (negate y) ... cong (+ esum (negate y)) (pnegTerm x)
-  ~~ neg (eterm x) + neg (esum y)    ... cong (neg (eterm x) +) (pneg y)
-  ~~ neg (eterm x + esum y)          ..< negDistributes
-
 -- Removing zero values from a sum of terms does not
 -- affect the evaluation result.
-0 pnormSum :  SolvableRing a
+0 pnormSum :  SolvableSemiring a
            => (s : Sum a as)
            -> esum (normSum s) === esum s
 pnormSum []           = Refl
@@ -221,7 +188,7 @@ pnormSum (T f p :: y) with (isZero f)
 
 -- Evaluating an expression gives the same result as
 -- evaluating its normalized form.
-0 pnorm :  SolvableRing a
+0 pnorm :  SolvableSemiring a
         => (e : Expr a as)
         -> eval e === esum (norm e)
 pnorm (Lit n)    = Calc $
@@ -235,11 +202,6 @@ pnorm (Var x y)  = Calc $
   ~~ eprod (fromVar y)          ..< pvar as y
   ~~ 1 * eprod (fromVar y)      ..< multOneLeftNeutral
   ~~ 1 * eprod (fromVar y) + 0  ..< plusZeroRightNeutral
-
-pnorm (Neg x) = Calc $
-  |~ neg (eval x)
-  ~~ neg (esum (norm x))    ... cong neg (pnorm x)
-  ~~ esum (negate (norm x)) ..< pneg (norm x)
 
 pnorm (Plus x y) = Calc $
   |~ eval x + eval y
@@ -259,22 +221,9 @@ pnorm (Mult x y) = Calc $
   ~~ esum (mult (norm x) (norm y))
      ... Sum.pmult _ _
 
-pnorm (Minus x y) = Calc $
-  |~ eval x - eval y
-  ~~ eval x + neg (eval y)
-     ... minusIsPlusNeg
-  ~~ esum (norm x) + neg (eval y)
-     ... cong (+ neg (eval y)) (pnorm x)
-  ~~ esum (norm x) + neg (esum (norm y))
-     ... cong (\v => esum (norm x) + neg v) (pnorm y)
-  ~~ esum (norm x) + esum (negate (norm y))
-     ..< cong (esum (norm x) +) (pneg (norm y))
-  ~~ esum (add (norm x) (negate (norm y)))
-     ... padd _ _
-
 -- Evaluating an expression gives the same result as
 -- evaluating its normalized form.
-0 pnormalize :  SolvableRing a
+0 pnormalize :  SolvableSemiring a
              => (e : Expr a as)
              -> eval e === esum (normalize e)
 pnormalize e = Calc $
@@ -303,7 +252,7 @@ pnormalize e = Calc $
 |||                (x .*. x + 2 *. x *. y + y .*. y)
 ||| ```
 export
-0 solve :  SolvableRing a
+0 solve :  SolvableSemiring a
         => (as : List a)
         -> (e1,e2 : Expr a as)
         -> (prf : normalize e1 === normalize e2)
@@ -313,20 +262,3 @@ solve _ e1 e2 = Calc $
   ~~ esum (normalize e1) ...(pnormalize e1)
   ~~ esum (normalize e2) ...(cong esum prf)
   ~~ eval e2             ..<(pnormalize e2)
-
---------------------------------------------------------------------------------
---          Examples
---------------------------------------------------------------------------------
-
-0 binom1 : {x,y : Bits8} -> (x + y) * (x + y) === x * x + 2 * x * y + y * y
-binom1 = solve [x,y]
-               ((x .+. y) * (x .+. y))
-               (x .*. x + 2 *. x *. y + y .*. y)
-
-0 binom2 : {x,y : Bits8} -> (x - y) * (x - y) === x * x - 2 * x * y + y * y
-binom2 = solve [x,y]
-               ((x .-. y) * (x .-. y))
-               (x .*. x - 2 *. x *. y + y .*. y)
-
-0 binom3 : {x,y : Bits8} -> (x + y) * (x - y) === x * x - y * y
-binom3 = solve [x,y] ((x .+. y) * (x .-. y)) (x .*. x - y .*. y)
