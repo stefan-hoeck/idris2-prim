@@ -6,6 +6,13 @@ import Algebra.Solver.Ring.Util
 
 %default total
 
+||| Every arithmetic expression in a commutative ring
+||| can be represented as a sum of products of the variables
+||| each raised by an exponent and multiplied by a constant
+||| factor. For instance, expression `x + x * (y + z + z)`
+||| gets normalized to `x + x * y + 2 * x * z`.
+|||
+||| This function evaluates individual products in such a sum.
 public export
 eprod : Ring a => {as : List a} -> Prod a as -> a
 eprod {as = []}      []        = 1

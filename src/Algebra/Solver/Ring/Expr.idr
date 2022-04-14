@@ -63,13 +63,31 @@ pow x (S k) = x * pow x k
 ||| in `Data.Prim.Integer.Extra`.
 public export
 data Expr : (a : Type) -> (as : List a) -> Type where
+  ||| A literal. This should be a value known at compile time
+  ||| so that it reduces during normalization.
   Lit   : (v : a) -> Expr a as
+
+  ||| A variabl. This is is for values not known at compile
+  ||| time. In order to compare and merge variables, we need an
+  ||| `Elem x as` proof.
   Var   : (x : a) -> Elem x as -> Expr a as
+
+  ||| Negates and expression.
   Neg   : Expr a as -> Expr a as
+
+  ||| Addition of two expressions.
   Plus  : (x,y : Expr a as) -> Expr a as
+
+  ||| Multiplication of two expressions.
   Mult  : (x,y : Expr a as) -> Expr a as
+
+  ||| Subtraction of two expressions.
   Minus : (x,y : Expr a as) -> Expr a as
 
+||| While this allows you to use the usual operators
+||| for addition and multiplication, it is often convenient
+||| to use related operators `.*.`, `.+.`, and similar when
+||| working with variables.
 public export
 Num a => Num (Expr a as) where
   (+) = Plus
@@ -81,6 +99,8 @@ Neg a => Neg (Expr a as) where
   negate = Neg
   (-)    = Minus
 
+||| Like `Var` but takes the `Elem x as` as an auto implicit
+||| argument.
 public export
 var : {0 as : List a} -> (x : a) -> Elem x as => Expr a as
 var x = Var x %search
@@ -95,6 +115,8 @@ infixl 8 .-., .-, -.
 
 infixl 9 .*., .*, *.
 
+||| Addition of variables. This is an alias for
+||| `var x + var y`.
 public export
 (.+.) :  {0 as : List a}
       -> (x,y : a)
@@ -103,6 +125,8 @@ public export
       => Expr a as
 (.+.) x y = Plus (var x) (var y)
 
+||| Addition of variables. This is an alias for
+||| `x + var y`.
 public export
 (+.) :  {0 as : List a}
      -> (x : Expr a as)
@@ -111,6 +135,8 @@ public export
      => Expr a as
 (+.) x y = Plus x (var y)
 
+||| Addition of variables. This is an alias for
+||| `var x + y`.
 public export
 (.+) :  {0 as : List a}
      -> (x : a)
@@ -119,6 +145,8 @@ public export
      => Expr a as
 (.+) x y = Plus (var x) y
 
+||| Subtraction of variables. This is an alias for
+||| `var x - var y`.
 public export
 (.-.) :  {0 as : List a}
       -> (x,y : a)
@@ -127,6 +155,8 @@ public export
       => Expr a as
 (.-.) x y = Minus (var x) (var y)
 
+||| Subtraction of variables. This is an alias for
+||| `x - var y`.
 public export
 (-.) :  {0 as : List a}
      -> (x : Expr a as)
@@ -135,6 +165,8 @@ public export
      => Expr a as
 (-.) x y = Minus x (var y)
 
+||| Subtraction of variables. This is an alias for
+||| `var x - y`.
 public export
 (.-) :  {0 as : List a}
      -> (x : a)
@@ -143,6 +175,8 @@ public export
      => Expr a as
 (.-) x y = Minus (var x) y
 
+||| Multiplication of variables. This is an alias for
+||| `var x * var y`.
 public export
 (.*.) :  {0 as : List a}
       -> (x,y : a)
@@ -151,6 +185,8 @@ public export
       => Expr a as
 (.*.) x y = Mult (var x) (var y)
 
+||| Multiplication of variables. This is an alias for
+||| `var x * y`.
 public export
 (*.) :  {0 as : List a}
      -> (x : Expr a as)
@@ -159,6 +195,8 @@ public export
      => Expr a as
 (*.) x y = Mult x (var y)
 
+||| Multiplication of variables. This is an alias for
+||| `x * var y`.
 public export
 (.*) :  {0 as : List a}
      -> (x : a)
@@ -171,6 +209,9 @@ public export
 --          Evaluation
 --------------------------------------------------------------------------------
 
+||| Evaluation of expressions. This keeps the exact
+||| structure of the expression tree. For instance
+||| `eval $ x .*. (y .+. z)` evaluates to `x * (y + z)`.
 public export
 eval : Ring a => Expr a as -> a
 eval (Lit v)     = v
@@ -184,6 +225,8 @@ eval (Minus x y) = eval x - eval y
 --          Proofs
 --------------------------------------------------------------------------------
 
+||| Proof that addition of exponents is equivalent to multiplcation
+||| of the two terms.
 export
 0 ppow : Ring a
        => (m,n : Nat)
