@@ -1,7 +1,7 @@
-module Algebra.Solver.Ring.Expr
+module Algebra.Solver.Semiring.Expr
 
 import public Data.List.Elem
-import public Algebra.Ring
+import public Algebra.Semiring
 import Syntax.PreorderReasoning
 
 %default total
@@ -13,7 +13,7 @@ import Syntax.PreorderReasoning
 ||| Multiplies a value `n` times with itself. In case of `n`
 ||| being zero, this returns `1`.
 public export
-pow : Ring a => a -> Nat -> a
+pow : Semiring a => a -> Nat -> a
 pow x 0     = 1
 pow x (S k) = x * pow x k
 
@@ -21,7 +21,7 @@ pow x (S k) = x * pow x k
 --          Expression
 --------------------------------------------------------------------------------
 
-||| Data type representing expressions in a commutative ring.
+||| Data type representing expressions in a commutative semiring.
 |||
 ||| This is used to at compile time compare different forms of
 ||| the same expression and proof that they evaluate to
@@ -51,16 +51,13 @@ pow x (S k) = x * pow x k
 ||| time:
 |||
 ||| 1. Both expressions are converted to a normal form via
-|||    `Algebra.Solver.Ring.Sum.normalize`.
+|||    `Algebra.Solver.Semiring.Sum.normalize`.
 ||| 2. The normal forms are compared for being identical.
-||| 3. Since in `Algebra.Solver.Ring.Sum` there is a proof that
+||| 3. Since in `Algebra.Solver.Semiring.Sum` there is a proof that
 |||    converting an expression to its normal form does not
 |||    affect the result when evaluating it, if the normal
 |||    forms are identical, the two expressions must evaluate
 |||    to the same result.
-|||
-||| You can find several examples of making use of this
-||| in `Data.Prim.Integer.Extra`.
 public export
 data Expr : (a : Type) -> (as : List a) -> Type where
   ||| A literal. This should be a value known at compile time
@@ -72,17 +69,11 @@ data Expr : (a : Type) -> (as : List a) -> Type where
   ||| `Elem x as` proof.
   Var   : (x : a) -> Elem x as -> Expr a as
 
-  ||| Negates and expression.
-  Neg   : Expr a as -> Expr a as
-
   ||| Addition of two expressions.
   Plus  : (x,y : Expr a as) -> Expr a as
 
   ||| Multiplication of two expressions.
   Mult  : (x,y : Expr a as) -> Expr a as
-
-  ||| Subtraction of two expressions.
-  Minus : (x,y : Expr a as) -> Expr a as
 
 ||| While this allows you to use the usual operators
 ||| for addition and multiplication, it is often convenient
@@ -93,11 +84,6 @@ Num a => Num (Expr a as) where
   (+) = Plus
   (*) = Mult
   fromInteger = Lit . fromInteger
-
-public export
-Neg a => Neg (Expr a as) where
-  negate = Neg
-  (-)    = Minus
 
 ||| Like `Var` but takes the `Elem x as` as an auto implicit
 ||| argument.
@@ -110,8 +96,6 @@ var x = Var x %search
 --------------------------------------------------------------------------------
 
 infixl 8 .+., .+, +.
-
-infixl 8 .-., .-, -.
 
 infixl 9 .*., .*, *.
 
@@ -144,36 +128,6 @@ public export
      -> Elem x as
      => Expr a as
 (.+) x y = Plus (var x) y
-
-||| Subtraction of variables. This is an alias for
-||| `var x - var y`.
-public export
-(.-.) :  {0 as : List a}
-      -> (x,y : a)
-      -> Elem x as
-      => Elem y as
-      => Expr a as
-(.-.) x y = Minus (var x) (var y)
-
-||| Subtraction of variables. This is an alias for
-||| `x - var y`.
-public export
-(-.) :  {0 as : List a}
-     -> (x : Expr a as)
-     -> (y : a)
-     -> Elem y as
-     => Expr a as
-(-.) x y = Minus x (var y)
-
-||| Subtraction of variables. This is an alias for
-||| `var x - y`.
-public export
-(.-) :  {0 as : List a}
-     -> (x : a)
-     -> (y : Expr a as)
-     -> Elem x as
-     => Expr a as
-(.-) x y = Minus (var x) y
 
 ||| Multiplication of variables. This is an alias for
 ||| `var x * var y`.
@@ -213,13 +167,11 @@ public export
 ||| structure of the expression tree. For instance
 ||| `eval $ x .*. (y .+. z)` evaluates to `x * (y + z)`.
 public export
-eval : Ring a => Expr a as -> a
+eval : Semiring a => Expr a as -> a
 eval (Lit v)     = v
 eval (Var x y)   = x
-eval (Neg v)     = neg $ eval v
 eval (Plus x y)  = eval x + eval y
 eval (Mult x y)  = eval x * eval y
-eval (Minus x y) = eval x - eval y
 
 --------------------------------------------------------------------------------
 --          Proofs
@@ -228,7 +180,7 @@ eval (Minus x y) = eval x - eval y
 ||| Proof that addition of exponents is equivalent to multiplcation
 ||| of the two terms.
 export
-0 ppow :  Ring a
+0 ppow :  Semiring a
        => (m,n : Nat)
        -> (x   : a)
        -> pow x (m + n) === pow x m * pow x n

@@ -178,8 +178,8 @@ solvePlusRight r =
   |> rel r (x + z) (y + z)
   <> rel r ((x + z) - z) ((y + z - z)) ... minus
   <> rel r x y                         =.= (
-       solve [x,z] ((v x + v z) - v z) (v x)
-     , solve [y,z] ((v y + v z) - v z) (v y)
+       solve [x,z] ((x .+. z) -. z) (var x)
+     , solve [y,z] ((y .+. z) -. z) (var y)
      )
 
 ||| We can solve (in)equalities, where the same value has
@@ -215,8 +215,8 @@ solveMinus r =
   |> rel r (x - z) (y - z)
   <> rel r ((x - z) + z) ((y - z) + z) ... plusRight
   <> rel r x y                         =.= (
-       solve [x,z] ((v x - v z) + v z) (v x)
-     , solve [y,z] ((v y - v z) + v z) (v y)
+       solve [x,z] ((x .-. z) +. z) (var x)
+     , solve [y,z] ((y .-. z) +. z) (var y)
      )
 
 ||| We can solve (in)equalities, with one side an addition
@@ -235,8 +235,8 @@ solvePlusRightZero r =
   |> rel r 0 (x + y)
   <> rel r (0 - y) ((x + y) - y) ... minus
   <> rel r (neg y) x             =.= (
-       solve [y]   (0 - v y) (neg (v y))
-     , solve [x,y] ((v x + v y) - v y) (v x)
+       solve [y]   (0 -. y) (neg (var y))
+     , solve [x,y] ((x .+. y) -. y) (var x)
      )
 
 ||| We can solve (in)equalities, with one side an addition
@@ -303,8 +303,8 @@ solveMinusZero r =
   |> rel r 0 (x - y)
   <> rel r (0 + y) ((x - y) + y) ... plusRight
   <> rel r y x                   =.= (
-       solve [y]   (0 + v y) (v y)
-     , solve [x,y] ((v x - v y) + v y) (v x)
+       solve [y]   (0 +. y) (var y)
+     , solve [x,y] ((x .-. y) +. y) (var x)
      )
 
 --------------------------------------------------------------------------------
@@ -326,8 +326,8 @@ negate r =
   |> rel r x y
   <> rel r (x - (x + y)) (y - (x + y)) ... minus
   <> rel r (neg y) (neg x)             =.= (
-       solve [x,y] (v x - (v x + v y)) (negate $ v y)
-     , solve [x,y] (v y - (v x + v y)) (negate $ v x)
+       solve [x,y] (x .- (x .+. y)) (negate $ var y)
+     , solve [x,y] (y .- (x .+. y)) (negate $ var x)
      )
 
 ||| Negating both sides inverts an inequality.
@@ -395,8 +395,8 @@ mplLemma p =
   <> 0         < z * (y - x)         ... (\_ => multPosPosGT0 _ _ p)
   <> 0 + z * x < z * (y - x) + z * x ... plusRight
   <> z * x     < z * y               =.= (
-       solve [x,z]   (0 + v z * v x) (v z * v x)
-     , solve [x,y,z] (v z * (v y - v x) + v z * v x) (v z * v y)
+       solve [x,z]   (0 + z .*. x) (z .*. x)
+     , solve [x,y,z] (z .* (y .-. x) + z .*. x) (z .*. y)
      )
 
 ||| Multiplication with a positive number preserves an inequality.
@@ -469,8 +469,8 @@ multNegLeft p r =
       <> rel r (neg y) (neg x)                 ... negate
       <> rel r (neg z * neg y) (neg z * neg x) ... multPosLeft negp
       <> rel r (z * y) (z * x)                 =.= (
-           solve [z,y] (neg (v z) * neg (v y)) (v z * v y)
-         , solve [z,x] (neg (v z) * neg (v x)) (v z * v x)
+           solve [z,y] (neg (var z) * neg (var y)) (z .*. y)
+         , solve [z,x] (neg (var z) * neg (var x)) (z .*. x)
          )
 
 ||| Multiplication with a negative number reverses an inequality.
@@ -638,8 +638,8 @@ solveMultNegLeft dneg r =
    in |> rel r (d * x) (d * y)
       <> rel r (neg (d * y)) (neg (d * x)) ... negate
       <> rel r (neg d * y) (neg d * x)     =.= (
-           solve [d,y] (neg (v d * v y)) (neg (v d) * v y)
-         , solve [d,x] (neg (v d * v x)) (neg (v d) * v x)
+           solve [d,y] (neg (d .*. y)) (neg (var d) *. y)
+         , solve [d,x] (neg (d .*. x)) (neg (var d) *. x)
          )
       <> rel r y x ... solveMultPosLeft negdPos
 
@@ -820,8 +820,8 @@ multDivP1 dpos = App (snd $ modLT n d dpos) $
   <> d * div n d + mod n d < d * div n d + d ... plusLeft
   <> n < d * (div n d + 1)                   =.= (
        lawDivMod n d %search
-     , solve [n,d,div n d] (v d * v (div n d) + v d)
-                           (v d * (v (div n d) + 1))
+     , solve [n,d,div n d] (d .*. div n d +. d)
+                           (d .* (div n d .+ 1))
      )
 
 export
@@ -849,7 +849,7 @@ modLTE ngte0 dpos = App (divNonNeg ngte0 dpos) $
   <> d * 0           <= d * div n d           ... multPosLeft dpos
   <> d * 0 + mod n d <= d * div n d + mod n d ... plusRight
   <> mod n d         <= n                     =.= (
-       solve [d, mod n d] (v d * 0 + v (mod n d)) (v (mod n d))
+       solve [d, mod n d] (d .* 0 +. mod n d) (var (mod n d))
      , lawDivMod n d %search
      )
 

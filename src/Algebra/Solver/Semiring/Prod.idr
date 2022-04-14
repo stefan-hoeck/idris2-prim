@@ -1,8 +1,8 @@
-module Algebra.Solver.Ring.Prod
+module Algebra.Solver.Semiring.Prod
 
-import Algebra.Solver.Ring.Expr
+import Algebra.Solver.Semiring.Expr
 import public Algebra.Solver.Prod
-import Algebra.Solver.Ring.Util
+import Algebra.Solver.Semiring.Util
 
 %default total
 
@@ -15,7 +15,7 @@ import Algebra.Solver.Ring.Util
 ||| factor. For instance, expression `x + x * (y + z + z)`
 ||| gets normalized to `x + x * y + 2 * x * z`.
 public export
-eprod : Ring a => {as : List a} -> Prod a as -> a
+eprod : Semiring a => {as : List a} -> Prod a as -> a
 eprod {as = []}      []        = 1
 eprod {as = x :: xs} (e :: es) = pow x e * eprod es
 
@@ -25,7 +25,7 @@ eprod {as = x :: xs} (e :: es) = pow x e * eprod es
 
 ||| Proof that `one` evaluates to 1.
 export
-0 pone : Ring a => (as : List a) -> eprod (one {as}) === 1
+0 pone : Semiring a => (as : List a) -> eprod (one {as}) === 1
 pone []        = Refl
 pone (x :: xs) = Calc $
   |~ 1 * eprod (one {as = xs})
@@ -34,7 +34,7 @@ pone (x :: xs) = Calc $
 
 ||| Proof that `fromVar x` evaluates to `x`.
 export
-0 pvar :  Ring a
+0 pvar :  Semiring a
        => (as : List a)
        -> (e  : Elem x as)
        -> eprod (fromVar {as} e) === x
@@ -56,7 +56,7 @@ pvar [] (There y) impossible
 ||| is the same as multiplying the results of evaluating each
 ||| of them.
 export
-0 pmult :  Ring a
+0 pmult :  Semiring a
         => (p,q : Prod a as)
         -> eprod (mult p q) === eprod p * eprod q
 pmult []        []        = sym multOneLeftNeutral
@@ -68,3 +68,4 @@ pmult {as = h :: t} (x :: xs) (y :: ys) = Calc $
      ... cong ((pow h x * pow h y) *) (pmult xs ys)
   ~~ (pow h x * eprod xs) * (pow h y * eprod ys)
      ... Util.m1324
+
