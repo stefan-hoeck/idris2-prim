@@ -30,6 +30,8 @@ modules = Algebra.Semigroup
         , Algebra.Solver.Semiring.Sum
         , Algebra.Solver.Semiring.Util
 
+        , Data.Maybe.NothingMin
+        , Data.Maybe.NothingMax
         , Data.Prim
         , Data.Prim.Char
         , Data.Prim.Bits8
