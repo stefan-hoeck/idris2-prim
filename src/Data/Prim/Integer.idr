@@ -1,5 +1,6 @@
 module Data.Prim.Integer
 
+import public Control.WellFounded
 import public Data.Prim.Ord
 import public Algebra.Solver.Ring
 import Syntax.PreorderReasoning
@@ -160,3 +161,28 @@ sdiv n d = n `div` d
 export %inline
 smod : (n,d : Integer) -> (0 prf : d /= 0) => Integer
 smod n d = n `mod` d
+
+--------------------------------------------------------------------------------
+--          Well-Foundedness
+--------------------------------------------------------------------------------
+
+public export
+0 BoundedLT : (lowerBound : Integer) -> Integer -> Integer -> Type
+BoundedLT lowerBound x y = (lowerBound <= x, x < y)
+
+public export
+0 BoundedGT : (upperBound : Integer) -> Integer -> Integer -> Type
+BoundedGT upperBound x y = (upperBound >= x, x > y)
+
+||| Every value of type `Integer` with a fixed lower bound
+||| is accessible with relation to `(<)`.
+export
+accessLT : (m : Integer) -> Accessible (BoundedLT lb) m
+accessLT m = Access $ \n,lt => accessLT (assert_smaller m n)
+
+||| Every value of type `Integer` with a fixed upper bound
+||| is accessible with relation to `(>)`.
+export
+accessGT : (m : Integer) -> Accessible (BoundedGT ub) m
+accessGT m = Access $ \n,gt => accessGT (assert_smaller m n)
+

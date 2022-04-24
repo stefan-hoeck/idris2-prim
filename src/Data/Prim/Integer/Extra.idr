@@ -146,6 +146,74 @@ plusRight w =
   <> rel w (z + x) (z + y) ... plusLeft
   <> rel w (x + z) (y + z) =.= pairPlusCommutative
 
+||| The result of adding a positive value is greater than
+||| the original.
+export
+0 plusPosRight :  {x,y : Integer} -> 0 < y -> x < x + y
+plusPosRight =
+  |> 0 < y
+  <> x + 0 < x + y ... plusLeft
+  <> x     < x + y =.. plusZeroRightNeutral
+
+||| The result of adding a positive value is greater than
+||| the original.
+export
+0 plusPosLeft :  {x,y : Integer} -> 0 < y -> x < y + x
+plusPosLeft =
+  |> 0 < y
+  <> 0 + x < y + x ... plusRight
+  <> x     < y + x =.. plusZeroLeftNeutral
+
+||| The result of adding a positive value is not less than
+||| the original.
+export
+0 plusNonNegRight :  {x,y : Integer} -> 0 <= y -> x <= x + y
+plusNonNegRight (Left lt)  = Left (plusPosRight lt)
+plusNonNegRight (Right eq) =
+  Right $ rewrite sym eq in (sym $ plusZeroRightNeutral {n = x})
+
+||| The result of adding a positive value is not less than
+||| the original.
+export
+0 plusNonNegLeft :  {x,y : Integer} -> 0 <= y -> x <= y + x
+plusNonNegLeft (Left lt)  = Left (plusPosLeft lt)
+plusNonNegLeft (Right eq) =
+  Right $ rewrite sym eq in (sym $ plusZeroLeftNeutral {n = x})
+
+||| The result of adding a negative value is greater than
+||| the original.
+export
+0 plusNegRight :  {x,y : Integer} -> y < 0 -> x + y < x
+plusNegRight =
+  |> y < 0
+  <> x + y < x + 0 ... plusLeft
+  <> x + y < x     ..= plusZeroRightNeutral
+
+||| The result of adding a negative value is greater than
+||| the original.
+export
+0 plusNegLeft :  {x,y : Integer} -> y < 0 -> y + x < x
+plusNegLeft =
+  |> y < 0
+  <> y + x < 0 + x ... plusRight
+  <> y + x < x     ..= plusZeroLeftNeutral
+
+||| The result of adding a positive value is not less than
+||| the original.
+export
+0 plusNonPosRight :  {x,y : Integer} -> y <= 0 -> x + y <= x
+plusNonPosRight (Left lt)  = Left (plusNegRight lt)
+plusNonPosRight (Right eq) =
+  Right $ rewrite eq in (plusZeroRightNeutral {n = x})
+
+||| The result of adding a positive value is not less than
+||| the original.
+export
+0 plusNonPosLeft :  {x,y : Integer} -> y <= 0 -> y + x <= x
+plusNonPosLeft (Left lt)  = Left (plusNegLeft lt)
+plusNonPosLeft (Right eq) =
+  Right $ rewrite eq in (plusZeroLeftNeutral {n = x})
+
 ||| Subtracting a value does not affect an inequality.
 |||
 ||| ```idris example
@@ -161,6 +229,44 @@ minus r =
   |> rel r x y
   <> rel r (x + neg z) (y + neg z) ... plusRight
   <> rel r (x - z) (y - z)         ~.~ (minusIsPlusNeg, minusIsPlusNeg)
+
+||| Subtracting a value from a larger one
+||| yields a positive result.
+export
+0 minusLT :  {x,y : Integer} -> x < y -> 0 < y - x
+minusLT =
+  |> x     < y
+  <> x - x < y - x ... minus
+  <> 0     < y - x =.. minusSelfZero
+
+||| Subtracting a value from a non-smaller one
+||| yields a non-negative result.
+export
+0 minusLTE :  {x,y : Integer} -> x <= y -> 0 <= y - x
+minusLTE (Left lt)  = Left (minusLT lt)
+minusLTE (Right eq) = Right $ Calc $
+  |~ 0
+  ~~ x - x ..< minusSelfZero
+  ~~ y - x ... cong (\v => v - x) eq
+
+||| Subtracting a value from a smaller one
+||| yields a negative result.
+export
+0 minusGT :  {x,y : Integer} -> x < y -> x - y < 0
+minusGT =
+  |> x     < y
+  <> x - y < y - y ... minus
+  <> x - y < 0     ..= minusSelfZero
+
+||| Subtracting a value from a non-greater one
+||| yields a non-positive result.
+export
+0 minusGTE :  {x,y : Integer} -> x <= y -> x - y <= 0
+minusGTE (Left lt)  = Left (minusGT lt)
+minusGTE (Right eq) = Right $ Calc $
+  |~ x - y
+  ~~ x - x ..< cong (\v => x - v) eq
+  ~~ 0     ... minusSelfZero
 
 ||| We can solve (in)equalities, where the same value has
 ||| been added on both sides.
