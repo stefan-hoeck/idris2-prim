@@ -6,6 +6,12 @@ import public Data.Trichotomy
 
 %default total
 
+||| Similar to `Either` but with erased fields.
+public export
+data Either0 : Type -> Type -> Type where
+  Left0  : (0 v : a) -> Either0 a b
+  Right0 : (0 v : b) -> Either0 a b
+
 ||| We often don't trust values of type `a === b`, as they might
 ||| have been magically crafted using `believe_me` or `assert_total`
 ||| followed by `idris_crash`. If a value of another type follows
@@ -49,6 +55,30 @@ interface Total (0 a : Type) (0 lt : a -> a -> Type) | lt where
 
   ||| Axiom II: Trichotomy of `<`, `===`, and `>`.
   trichotomy : (m,n : a) -> Trichotomy lt m n
+
+||| Tests if the first value is strictly less than the second or not
+export
+testLT : Total a lt => (x,y : a) -> Either0 (lt x y) (Either (lt y x) (y === x))
+testLT x y = case trichotomy {lt} x y of
+  LT p _ _ => Left0 p
+  EQ _ p _ => Right0 (Right $ sym p)
+  GT _ _ p => Right0 (Left p)
+
+||| Tests if the first value is strictly greater than the second or not
+export
+testGT : Total a lt => (x,y : a) -> Either0 (lt y x) (Either (lt x y) (x === y))
+testGT x y = case trichotomy {lt} x y of
+  GT _ _ p => Left0 p
+  LT p _ _ => Right0 (Left p)
+  EQ _ p _ => Right0 (Right p)
+
+||| Tests if the two values are provably equal or not
+export
+testEQ : Total a lt => (x,y : a) -> Either0 (x === y) (Either (lt x y) (lt y x))
+testEQ x y = case trichotomy {lt} x y of
+  EQ _ p _ => Left0 p
+  LT p _ _ => Right0 (Left p)
+  GT _ _ p => Right0 (Right p)
 
 --------------------------------------------------------------------------------
 --          Corollaries
