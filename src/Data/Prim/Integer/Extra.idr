@@ -413,6 +413,13 @@ solveMinusZero r =
      , solve [x,y] ((x .-. y) +. y) (var x)
      )
 
+export
+0 plusOneLTE : {x,y : Integer} -> x < y -> x + 1 <= y
+plusOneLTE lt = App (oneAfterZero (y - x) (minusLT lt)) $
+  |> 1     <= y - x
+  <> x + 1 <= x + (y - x) ... plusLeft
+  <> x + 1 <= y           ..= solve [x,y] (x .+ (y .-. x)) (var y)
+
 --------------------------------------------------------------------------------
 --          Negation in Inequalities
 --------------------------------------------------------------------------------
@@ -987,3 +994,17 @@ divGreaterOneLT npos dgt1 =
          <> div n d     < d * div n d =.. multOneLeftNeutral
          <> div n d     < n           ... (\_ => trans_GTE_GT $ multDiv dpos)
        GT _ _ p => void (LT_not_GTE p $ divNonNeg %search dpos)
+
+export
+0 divPos : {n,d : Integer} -> (d <= n) -> (0 < d) -> 0 < div n d
+divPos dn dp = assert_total $ case comp 0 (div n d) of
+  LT p _ _ => p
+  EQ _ p _ =>
+    let modIsN = Calc $
+          |~ mod n d
+          ~~ 0 + mod n d             ..< plusZeroLeftNeutral
+          ~~ (d * 0) + mod n d       ..< cong (+ mod n d) multZeroRightAbsorbs
+          ~~ (d * div n d) + mod n d ... cong (\x => (d * x) + mod n d) p
+          ~~ n                       ... lawDivMod n d (Right dp)
+     in void (LTE_not_GT dn $ rewrite sym modIsN in snd (modLT n d dp))
+  GT _ _ p => void (GT_not_LTE p (divNonNeg (Left $ trans_LT_LTE dp dn) dp))
