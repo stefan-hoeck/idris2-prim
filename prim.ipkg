@@ -1,6 +1,7 @@
 package prim
 
 authors    = "stefan-hoeck"
+brief      = "Laws and utilities for working with primitives in Idris2"
 version    = 0.0.1
 readme     = "README.md"
 license    = "BSD-3 Clause"
