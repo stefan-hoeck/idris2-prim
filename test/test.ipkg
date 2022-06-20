@@ -7,11 +7,12 @@ license    = "BSD-3 Clause"
 
 sourcedir  = "src"
 depends    = base         >= 0.5.1
-           , contrib      >= 0.5.1
-           , elab-util    >= 0.5.0
-           , pretty-show  >= 0.5.0
-           , sop          >= 0.5.0
-           , hedgehog     >= 0.5.0
+           , contrib
+           , elab-util
+           , pretty-show
+           , sop
+           , hedgehog
+           , prim
 
-main       = Test.Main
+main       = Main
 executable = "runTest"

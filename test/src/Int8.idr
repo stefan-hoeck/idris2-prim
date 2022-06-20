@@ -1,9 +1,9 @@
-module Test.Int8
+module Int8
 
 import Data.Prim.Int8
 import Data.SOP
 import Hedgehog
-import Test.RingLaws
+import RingLaws
 
 allInt8 : Gen Int8
 allInt8 = int8 (linear (-0x80) 0xff)

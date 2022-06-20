@@ -1,9 +1,9 @@
-module Test.Int64
+module Int64
 
 import Data.Prim.Int64
 import Data.SOP
 import Hedgehog
-import Test.RingLaws
+import RingLaws
 
 allInt64 : Gen Int64
 allInt64 = int64 (linear (-0x8000000000000000) 0xffffffffffffffff)

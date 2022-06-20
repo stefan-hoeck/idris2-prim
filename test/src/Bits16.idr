@@ -1,9 +1,9 @@
-module Test.Bits16
+module Bits16
 
 import Data.Prim.Bits16
 import Data.SOP
 import Hedgehog
-import Test.RingLaws
+import RingLaws
 
 allBits16 : Gen Bits16
 allBits16 = bits16 (linear 0 0xffff)

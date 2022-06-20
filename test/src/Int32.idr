@@ -1,32 +1,32 @@
-module Test.Int16
+module Int32
 
-import Data.Prim.Int16
+import Data.Prim.Int32
 import Data.SOP
 import Hedgehog
-import Test.RingLaws
+import RingLaws
 
-allInt16 : Gen Int16
-allInt16 = int16 (linear (-0x8000) 0xffff)
+allInt32 : Gen Int32
+allInt32 = int32 (linear (-0x80000000) 0xffffffff)
 
 prop_ltMax : Property
 prop_ltMax = property $ do
-  b8 <- forAll allInt16
-  (b8 <= MaxInt16) === True
+  b8 <- forAll allInt32
+  (b8 <= MaxInt32) === True
 
 prop_ltMin : Property
 prop_ltMin = property $ do
-  b8 <- forAll allInt16
-  (b8 >= MinInt16) === True
+  b8 <- forAll allInt32
+  (b8 >= MinInt32) === True
 
 prop_comp : Property
 prop_comp = property $ do
-  [m,n] <- forAll $ np [allInt16, allInt16]
+  [m,n] <- forAll $ np [allInt32, allInt32]
   toOrdering (comp m n) === compare m n
 
 export
 props : Group
-props = MkGroup "Int16" $
+props = MkGroup "Int32" $
   [ ("prop_ltMax",  prop_ltMax)
   , ("prop_ltMin",  prop_ltMin)
   , ("prop_comp",   prop_comp)
-  ] ++ ringProps allInt16
+  ] ++ ringProps allInt32

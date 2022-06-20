@@ -1,25 +1,26 @@
-module Test.Char
+module String
 
-import Data.Prim.Char
+import Data.Prim.String
 import Data.SOP
 import Hedgehog
 
-allChar : Gen Char
-allChar = unicodeAll
+allString : Gen String
+allString = string (linear 0 30) unicodeAll
 
 prop_ltMin : Property
 prop_ltMin = property $ do
-  b8 <- forAll allChar
-  (b8 >= MinChar) === True
+  b8 <- forAll allString
+  (b8 >= MinString) === True
 
 prop_comp : Property
 prop_comp = property $ do
-  [m,n] <- forAll $ np [allChar, allChar]
+  [m,n] <- forAll $ np [allString, allString]
   toOrdering (comp m n) === compare m n
 
 export
 props : Group
-props = MkGroup "Char"
+props = MkGroup "String"
   [ ("prop_ltMin",  prop_ltMin)
   , ("prop_comp",   prop_comp)
   ]
+

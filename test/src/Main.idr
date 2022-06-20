@@ -1,17 +1,17 @@
-module Test.Main
+module Main
 
-import Test.Char
-import Test.Bits8
-import Test.Bits16
-import Test.Bits32
-import Test.Bits64
-import Test.Int8
-import Test.Int16
-import Test.Int32
-import Test.Int64
-import Test.Int
-import Test.Integer
-import Test.String
+import Char
+import Bits8
+import Bits16
+import Bits32
+import Bits64
+import Int8
+import Int16
+import Int32
+import Int64
+import Int
+import Integer
+import String
 import Hedgehog
 
 main : IO ()
