@@ -1,9 +1,9 @@
-module Test.Int
+module Int
 
 import Data.Prim.Int
 import Data.SOP
 import Hedgehog
-import Test.RingLaws
+import RingLaws
 
 allInt : Gen Int
 allInt = int (linear (-0x8000000000000000) 0xffffffffffffffff)

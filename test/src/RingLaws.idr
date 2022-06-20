@@ -1,4 +1,4 @@
-module Test.RingLaws
+module RingLaws
 
 import public Algebra.Ring
 import Data.SOP

@@ -1,9 +1,9 @@
-module Test.Bits32
+module Bits32
 
 import Data.Prim.Bits32
 import Data.SOP
 import Hedgehog
-import Test.RingLaws
+import RingLaws
 
 allBits32 : Gen Bits32
 allBits32 = bits32 (linear 0 0xffffffff)

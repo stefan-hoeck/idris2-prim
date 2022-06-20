@@ -1,0 +1,14 @@
+[custom.all.prim]
+type   = "local"
+path   = "."
+ipkg   = "prim.ipkg"
+
+[custom.all.prim-test]
+type   = "local"
+path   = "test"
+ipkg   = "test.ipkg"
+
+[custom.all.prim-docs]
+type   = "local"
+path   = "docs"
+ipkg   = "docs.ipkg"
