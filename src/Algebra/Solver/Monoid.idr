@@ -20,7 +20,7 @@ Monoid (Expr a) where
   neutral = Neutral
 
 public export
-eval : LMonoid a => Expr a -> a
+eval : Monoid a => Expr a -> a
 eval (Var x)      = x
 eval Neutral      = neutral
 eval (Append x y) = eval x <+> eval y
@@ -30,7 +30,7 @@ eval (Append x y) = eval x <+> eval y
 --------------------------------------------------------------------------------
 
 public export
-esum : LMonoid a => List a -> a
+esum : Monoid a => List a -> a
 esum []       = neutral
 esum (h :: t) = h <+> esum t
 
@@ -44,17 +44,22 @@ normalize (Append x y) = normalize x ++ normalize y
 --          Proofs
 --------------------------------------------------------------------------------
 
-0 psum :  LMonoid a
-       => (xs,ys : List a)
-       -> esum (xs ++ ys) === esum xs <+> esum ys
+0 psum :
+     {mon : _}
+  -> MonoidV a mon
+  => (xs,ys : List a)
+  -> esum (xs ++ ys) === esum xs <+> esum ys
 psum []        ys = sym appendLeftNeutral
 psum (x :: xs) ys = Calc $
   |~ x <+> esum (xs ++ ys)
   ~~ x <+> (esum xs <+> esum ys) ... cong (x <+>) (psum xs ys)
   ~~ (x <+> esum xs) <+> esum ys ... appendAssociative
 
-
-0 pnorm : LMonoid a => (e : Expr a) -> eval e === esum (normalize e)
+0 pnorm :
+     {mon : _}
+  -> MonoidV a mon
+  => (e : Expr a)
+  -> eval e === esum (normalize e)
 pnorm (Var x)      = sym appendRightNeutral
 pnorm Neutral      = Refl
 pnorm (Append x y) = Calc $
@@ -71,10 +76,12 @@ pnorm (Append x y) = Calc $
 --------------------------------------------------------------------------------
 
 export
-0 solve :  LMonoid a
-        => (e1,e2 : Expr a)
-        -> (prf : normalize e1 === normalize e2)
-        => eval e1 === eval e2
+0 solve :
+     {mon : _}
+  -> MonoidV a mon
+  => (e1,e2 : Expr a)
+  -> (prf : normalize e1 === normalize e2)
+  => eval e1 === eval e2
 solve e1 e2 = Calc $
   |~ eval e1
   ~~ esum (normalize e1) ... pnorm e1
@@ -85,8 +92,8 @@ solve e1 e2 = Calc $
 --          Example
 --------------------------------------------------------------------------------
 
-0 solverExample : {x,y,z : String}
-                -> x ++ ((y ++ "") ++ z) === ("" ++ x) ++ (y ++ z)
-solverExample =
-  solve (Var x <+> ((Var y <+> Neutral) <+> Var z))
-        ((Neutral <+> Var x) <+> (Var y <+> Var z))
+0 ex1 : {x,y,z : String} -> x ++ ((y ++ "") ++ z) === ("" ++ x) ++ (y ++ z)
+ex1 =
+  solve
+    (Var x <+> ((Var y <+> Neutral) <+> Var z))
+    ((Neutral <+> Var x) <+> (Var y <+> Var z))

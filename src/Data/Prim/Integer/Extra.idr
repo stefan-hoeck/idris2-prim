@@ -227,8 +227,10 @@ export
         -> r (x - z) (y - z)
 minus r =
   |> rel r x y
-  <> rel r (x + neg z) (y + neg z) ... plusRight
-  <> rel r (x - z) (y - z)         ~.~ (minusIsPlusNeg, minusIsPlusNeg)
+  <> rel r (x + negate z) (y + negate z)
+     ... plusRight
+  <> rel r (x - z) (y - z)
+     ~.~ (minusIsPlusNeg, minusIsPlusNeg)
 
 ||| Subtracting a value from a larger one
 ||| yields a positive result.
@@ -330,18 +332,18 @@ solveMinus r =
 |||
 ||| ```idris example
 ||| |> 0     < x + y
-||| <> neg y < x     ... solvePlusRightZero
+||| <> negate y < x     ... solvePlusRightZero
 ||| ```
 export
 0 solvePlusRightZero :  {x,y : Integer}
-                     -> Rel r (neg y) x
+                     -> Rel r (negate y) x
                      -> r 0 (x + y)
-                     -> r (neg y) x
+                     -> r (negate y) x
 solvePlusRightZero r =
   |> rel r 0 (x + y)
   <> rel r (0 - y) ((x + y) - y) ... minus
-  <> rel r (neg y) x             =.= (
-       solve [y]   (0 -. y) (neg (var y))
+  <> rel r (negate y) x             =.= (
+       solve [y]   (0 -. y) (negate (var y))
      , solve [x,y] ((x .+. y) -. y) (var x)
      )
 
@@ -367,17 +369,17 @@ solvePlusRightSelf r =
 |||
 ||| ```idris example
 ||| |> 0     < x + y
-||| <> neg x < y     ... solvePlusLeftZero
+||| <> negate x < y     ... solvePlusLeftZero
 ||| ```
 export
 0 solvePlusLeftZero :  {x,y : Integer}
-                     -> Rel r (neg x) y
+                     -> Rel r (negate x) y
                      -> r 0 (x + y)
-                     -> r (neg x) y
+                     -> r (negate x) y
 solvePlusLeftZero r =
   |> rel r 0 (x + y)
   <> rel r 0 (y + x)  ..= plusCommutative
-  <> rel r (neg x) y  ... solvePlusRightZero
+  <> rel r (negate x) y  ... solvePlusRightZero
 
 ||| We can solve (in)equalities, with one side an addition
 ||| and the other equalling the added value.
@@ -428,17 +430,17 @@ plusOneLTE lt = App (oneAfterZero (y - x) (minusLT lt)) $
 |||
 ||| ```idris example
 ||| |> x     <= y
-||| <> neg y <= neg x ... negate
+||| <> negate y <= negate x ... negate
 ||| ```
 export
 0 negate :  {x,y : Integer}
-         -> Rel r (neg y) (neg x)
+         -> Rel r (negate y) (negate x)
          -> r x y
-         -> r (neg y) (neg x)
+         -> r (negate y) (negate x)
 negate r =
   |> rel r x y
   <> rel r (x - (x + y)) (y - (x + y)) ... minus
-  <> rel r (neg y) (neg x)             =.= (
+  <> rel r (negate y) (negate x)             =.= (
        solve [x,y] (x .- (x .+. y)) (negate $ var y)
      , solve [x,y] (y .- (x .+. y)) (negate $ var x)
      )
@@ -446,51 +448,51 @@ negate r =
 ||| Negating both sides inverts an inequality.
 |||
 ||| ```idris example
-||| |> neg x <= neg y
+||| |> negate x <= negate y
 ||| <> y     <= x     ... negateNeg
 ||| ```
 export
-0 negateNeg : {x,y : Integer} -> Rel r y x -> r (neg x) (neg y) -> r y x
+0 negateNeg : {x,y : Integer} -> Rel r y x -> r (negate x) (negate y) -> r y x
 negateNeg r =
-  |> rel r (neg x) (neg y)
-  <> rel r (neg $ neg y) (neg $ neg x) ... negate
+  |> rel r (negate x) (negate y)
+  <> rel r (negate $ negate y) (negate $ negate x) ... negate
   <> rel r y x                         =.= (negInvolutory, negInvolutory)
 
 ||| `negate` specialized to where one side equals zero.
 |||
 ||| ```idris example
 ||| |> x < 0
-||| <> 0 < neg x ... negateZero
+||| <> 0 < negate x ... negateZero
 ||| ```
 |||
 ||| ```idris example
 ||| |> x <= 0
-||| <> 0 <= neg x ... negateZero
+||| <> 0 <= negate x ... negateZero
 ||| ```
 export
-0 negateZero : {x : Integer} -> Rel r (neg x) 0 -> r 0 x -> r (neg x) 0
+0 negateZero : {x : Integer} -> Rel r (negate x) 0 -> r 0 x -> r (negate x) 0
 negateZero r =
   |> rel r 0 x
-  <> rel r (neg x) (neg 0) ... negate
-  <> rel r (neg x) 0       ..= negZero
+  <> rel r (negate x) (negate 0) ... negate
+  <> rel r (negate x) 0       ..= negZero
 
 ||| `negate` specialized to where one side equals zero and the other
 ||| a negated value.
 |||
 ||| ```idris example
-||| |> neg x < 0
+||| |> negate x < 0
 ||| <> 0     < x ... negateNegZero
 ||| ```
 |||
 ||| ```idris example
-||| |> neg x <= 0
+||| |> negate x <= 0
 ||| <> 0     <= x ... negateNegZero
 ||| ```
 export
-0 negateNegZero : {x : Integer} -> Rel r x 0 -> r 0 (neg x) -> r x 0
+0 negateNegZero : {x : Integer} -> Rel r x 0 -> r 0 (negate x) -> r x 0
 negateNegZero r =
-  |> rel r 0             (neg x)
-  <> rel r (neg (neg x)) (neg 0) ... negate
+  |> rel r 0             (negate x)
+  <> rel r (negate (negate x)) (negate 0) ... negate
   <> rel r x 0                   =.= (negInvolutory, negZero)
 
 --------------------------------------------------------------------------------
@@ -577,13 +579,13 @@ export
               -> r x y
               -> r (z * y) (z * x)
 multNegLeft p r =
-  let negp = negateZero (neg z > 0) p
+  let negp = negateZero (negate z > 0) p
    in |> rel r x y
-      <> rel r (neg y) (neg x)                 ... negate
-      <> rel r (neg z * neg y) (neg z * neg x) ... multPosLeft negp
+      <> rel r (negate y) (negate x)                 ... negate
+      <> rel r (negate z * negate y) (negate z * negate x) ... multPosLeft negp
       <> rel r (z * y) (z * x)                 =.= (
-           solve [z,y] (neg (var z) * neg (var y)) (z .*. y)
-         , solve [z,x] (neg (var z) * neg (var x)) (z .*. x)
+           solve [z,y] (negate (var z) * negate (var y)) (z .*. y)
+         , solve [z,x] (negate (var z) * negate (var x)) (z .*. x)
          )
 
 ||| Multiplication with a negative number reverses an inequality.
@@ -747,12 +749,12 @@ export
                    -> r (d * x) (d * y)
                    -> r y x
 solveMultNegLeft dneg r =
-  let negdPos = negateZero (neg d > 0) dneg
+  let negdPos = negateZero (negate d > 0) dneg
    in |> rel r (d * x) (d * y)
-      <> rel r (neg (d * y)) (neg (d * x)) ... negate
-      <> rel r (neg d * y) (neg d * x)     =.= (
-           solve [d,y] (neg (d .*. y)) (neg (var d) *. y)
-         , solve [d,x] (neg (d .*. x)) (neg (var d) *. x)
+      <> rel r (negate (d * y)) (negate (d * x)) ... negate
+      <> rel r (negate d * y) (negate d * x)     =.= (
+           solve [d,y] (negate (d .*. y)) (negate (var d) *. y)
+         , solve [d,x] (negate (d .*. x)) (negate (var d) *. x)
          )
       <> rel r y x ... solveMultPosLeft negdPos
 
@@ -805,10 +807,10 @@ export
                         -> Rel r x 0
                         -> r 0 (x * y)
                         -> r x 0
-solveMultNegRightZero neg r =
+solveMultNegRightZero negate r =
   |> rel r 0 (x * y)
   <> rel r (0 * y) (x * y) ~.. multZeroLeftAbsorbs
-  <> rel r x 0             ... solveMultNegRight neg
+  <> rel r x 0             ... solveMultNegRight negate
 
 ||| We can solve (in)equalities, with one side a multiplication
 ||| with a positive number and the other equalling zero.
@@ -841,10 +843,10 @@ export
                         -> Rel r y 0
                         -> r 0 (x * y)
                         -> r y 0
-solveMultNegLeftZero neg r =
+solveMultNegLeftZero negate r =
   |> rel r 0 (x * y)
   <> rel r (x * 0) (x * y) ~.. multZeroRightAbsorbs
-  <> rel r y 0             ... solveMultNegLeft neg
+  <> rel r y 0             ... solveMultNegLeft negate
 
 ||| We can solve (in)equalities, with one side a multiplication
 ||| with a positive number and the other equalling the positive
@@ -898,10 +900,10 @@ export
                         -> Rel r x 1
                         -> r y (x * y)
                         -> r x 1
-solveMultNegRightSelf neg r =
+solveMultNegRightSelf negate r =
   |> rel r y (x * y)
   <> rel r (1 * y) (x * y) ~.. multOneLeftNeutral
-  <> rel r x 1             ... solveMultNegRight neg
+  <> rel r x 1             ... solveMultNegRight negate
 
 ||| We can solve (in)equalities, with one side a multiplication
 ||| with a negative number and the other equalling the negative
@@ -917,10 +919,10 @@ export
                         -> Rel r y 1
                         -> r x (x * y)
                         -> r y 1
-solveMultNegLeftSelf neg r =
+solveMultNegLeftSelf negate r =
   |> rel r x (x * y)
   <> rel r (x * 1) (x * y) ~.. multOneRightNeutral
-  <> rel r y 1             ... solveMultNegLeft neg
+  <> rel r y 1             ... solveMultNegLeft negate
 
 --------------------------------------------------------------------------------
 --          Division

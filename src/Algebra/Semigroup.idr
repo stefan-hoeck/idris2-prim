@@ -1,18 +1,24 @@
 module Algebra.Semigroup
 
+import Data.List1
+import Data.List1.Properties
+import Syntax.PreorderReasoning
+
 %default total
 
 ||| This interface is a witness that for a
 ||| type `a` the axioms of a semigroup hold: `(<+>)` is associative.
 |||
-||| Note: If the type is actually a monoid, use `Data.Algebra.LMonoid` instead.
+||| Note: If the type is actually a monoid, use `Data.Algebra.MonoidV` instead.
 public export
-interface Semigroup a => LSemigroup a where
+interface SemigroupV a (0 sem : Semigroup a) | a where
+  constructor MkSemigroupV
   0 appendAssociative : {x,y,z : a} -> x <+> (y <+> z) === (x <+> y) <+> z
 
-||| This interface is a witness that for a
-||| type `a` the axioms of a commutative semigroup hold:
-||| `(<+>)` is commutative.
-public export
-interface LSemigroup a => CommutativeSemigroup a where
-  0 appendCommutative : {x,y : a} -> x <+> y === y <+> x
+--------------------------------------------------------------------------------
+--          Implementations
+--------------------------------------------------------------------------------
+
+export %inline
+SemigroupV (List1 a) %search where
+  appendAssociative = Properties.appendAssociative _ _ _

@@ -84,7 +84,7 @@ comp m n = case prim__lt_Integer m n of
     x => EQ (eqNotLT unsafeRefl) (unsafeRefl) (eqNotLT unsafeRefl)
   x => LT (LT unsafeRefl) (ltNotEQ $ LT unsafeRefl) (ltNotGT $ LT unsafeRefl)
 
-export
+export %inline
 Total Integer (<) where
   trichotomy   = comp
   transLT p q  = strictLT p $ strictLT q $ LT unsafeRefl
@@ -141,7 +141,7 @@ modLT n d x with (mod n d)
   _ | _ = strictLT x (Left $ mkLT unsafeRefl, mkLT unsafeRefl)
 
 export
-0 modNegEQ : (n,d : Integer) -> d < 0 -> mod n d === mod n (neg d)
+0 modNegEQ : (n,d : Integer) -> d < 0 -> mod n d === mod n (negate d)
 modNegEQ n d x = strictLT x unsafeRefl
 
 export

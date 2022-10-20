@@ -50,6 +50,8 @@ strictRefl Refl x = x
 ||| interface `Total` to make sure that the axioms actually hold.
 public export
 interface Total (0 a : Type) (0 lt : a -> a -> Type) | lt where
+  constructor MkTotal
+
   ||| Axiom I: `<` is transitive.
   0 transLT : {k,m,n : a} -> lt k m -> lt m n -> lt k n
 

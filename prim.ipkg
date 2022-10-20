@@ -9,27 +9,20 @@ license    = "BSD-3 Clause"
 sourcedir  = "src"
 depends    = base    >= 0.5.1
 
-modules = Algebra.Semigroup
-        , Algebra.Semiring
+modules = Algebra.CommutativeMonoid
+        , Algebra.CommutativeSemigroup
         , Algebra.Monoid
         , Algebra.Ring
+        , Algebra.Semigroup
+        , Algebra.Semiring
 
         , Algebra.Solver.CommutativeMonoid
         , Algebra.Solver.Monoid
         , Algebra.Solver.Prod
         , Algebra.Solver.Ring
-        , Algebra.Solver.Ring.Expr
-        , Algebra.Solver.Ring.Prod
-        , Algebra.Solver.Ring.SolvableRing
-        , Algebra.Solver.Ring.Sum
-        , Algebra.Solver.Ring.Util
         , Algebra.Solver.Semigroup
         , Algebra.Solver.Semiring
-        , Algebra.Solver.Semiring.Expr
-        , Algebra.Solver.Semiring.Prod
-        , Algebra.Solver.Semiring.SolvableSemiring
-        , Algebra.Solver.Semiring.Sum
-        , Algebra.Solver.Semiring.Util
+        , Algebra.Solver.Sum
 
         , Data.Maybe.NothingMin
         , Data.Maybe.NothingMax
