@@ -93,15 +93,6 @@ Total Integer (<) where
 --          Arithmetics
 --------------------------------------------------------------------------------
 
-replace' : (0 p : a -> Type) -> (0 _ : x = y) -> p x -> p y
-replace' p prf px = replace {p} prf px
-
-derive :  {0 a,b : Type}
-       -> (x : a)
-       -> FastDerivation a b
-       -> b
-derive x z = case Calc z of Refl => x
-
 ---------
 -- Axioms
 
@@ -185,4 +176,3 @@ accessLT m = Access $ \n,lt => accessLT (assert_smaller m n)
 export
 accessGT : (m : Integer) -> Accessible (BoundedGT ub) m
 accessGT m = Access $ \n,gt => accessGT (assert_smaller m n)
-

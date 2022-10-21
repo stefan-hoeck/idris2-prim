@@ -28,29 +28,10 @@ public export
 interface Ring a (0 neg : Neg a) | a where
   constructor MkRing
 
-  ||| Addition is associative.
-  0 r_plusAssociative : {k,m,n : a} -> k + (m + n) === (k + m) + n
-
-  ||| Addition is commutative.
-  0 r_plusCommutative : {m,n : a} -> m + n === n + m
-
-  ||| 0 is the additive identity.
-  0 r_plusZeroLeftNeutral : {n : a} -> 0 + n === n
+  0 rsr : Semiring a (negNum neg)
 
   ||| `neg n` is the additive inverse of `n`.
   0 plusNegLeftZero : {n : a} -> negate n + n === 0
-
-  ||| Multiplication is associative.
-  0 r_multAssociative : {k,m,n : a} -> k * (m * n) === (k * m) * n
-
-  ||| Multiplication is commutative.
-  0 r_multCommutative : {m,n : a} -> m * n === n * m
-
-  ||| 1 is the multiplicative identity.
-  0 r_multOneLeftNeutral : {n : a} -> 1 * n === n
-
-  ||| Multiplication is distributive with respect to addition.
-  0 r_leftDistributive : {k,m,n : a} -> k * (m + n) === (k * m) + (k * n)
 
   ||| `m - n` is just "syntactic sugar" for `m + neg n`.
   0 minusIsPlusNeg : {m,n : a} -> m - n === m + negate n
@@ -64,47 +45,39 @@ export
 0 r_multZeroLeftAbsorbs : {neg : _} -> Ring a neg => {n : a} -> 0 * n === 0
 
 export %hint
-RSR : Ring a neg => Semiring a (negNum neg)
-RSR = MkSemiring
-  r_plusAssociative
-  r_plusCommutative
-  r_plusZeroLeftNeutral
-  r_multAssociative
-  r_multCommutative
-  r_multOneLeftNeutral
-  r_leftDistributive
-  r_multZeroLeftAbsorbs
+0 RSR : Ring a neg => Semiring a (negNum neg)
+RSR = rsr
 
 export
-RPlusCMon : {neg : _} -> Ring a neg => CommutativeMonoid a PlusMon
+0 RPlusCMon : {neg : _} -> Ring a neg => CommutativeMonoid a PlusMon
 RPlusCMon = SRPlusCMon @{RSR}
 
 export
-RPlusMon : {neg : _} -> Ring a neg => MonoidV a PlusMon
+0 RPlusMon : {neg : _} -> Ring a neg => MonoidV a PlusMon
 RPlusMon = SRPlusMon @{RSR}
 
 export
-RPlusCSem : {neg : _} -> Ring a neg => CommutativeSemigroup a PlusSem
+0 RPlusCSem : {neg : _} -> Ring a neg => CommutativeSemigroup a PlusSem
 RPlusCSem = SRPlusCSem @{RSR}
 
 export
-RPlusSem : {neg : _} -> Ring a neg => SemigroupV a PlusSem
+0 RPlusSem : {neg : _} -> Ring a neg => SemigroupV a PlusSem
 RPlusSem = SRPlusSem @{RSR}
 
 export
-RMultCMon : {neg : _} -> Ring a neg => CommutativeMonoid a MultMon
+0 RMultCMon : {neg : _} -> Ring a neg => CommutativeMonoid a MultMon
 RMultCMon = SRMultCMon @{RSR}
 
 export
-RMultMon : {neg : _} -> Ring a neg => MonoidV a MultMon
+0 RMultMon : {neg : _} -> Ring a neg => MonoidV a MultMon
 RMultMon = SRMultMon @{RSR}
 
 export
-RMultCSem : {neg : _} -> Ring a neg => CommutativeSemigroup a MultSem
+0 RMultCSem : {neg : _} -> Ring a neg => CommutativeSemigroup a MultSem
 RMultCSem = SRMultCSem @{RSR}
 
 export
-RMultSem : {neg : _} -> Ring a neg => SemigroupV a MultSem
+0 RMultSem : {neg : _} -> Ring a neg => SemigroupV a MultSem
 RMultSem = SRMultSem @{RSR}
 
 --------------------------------------------------------------------------------
@@ -301,7 +274,7 @@ negDistributes =
   ~~ (negate m + negate n) + (n + m)
      ... cong ((negate m + negate n) +) plusCommutative
   ~~ ((negate m + negate n) + n) + m
-     ... r_plusAssociative
+     ... plusAssociative
   ~~ (negate m + (negate n + n)) + m
      ..< cong (+m) plusAssociative
   ~~ (negate m + 0) + m
@@ -442,122 +415,73 @@ negMultNeg =
 unsafeRefl : a === b
 unsafeRefl = believe_me (Refl {x = a})
 
+0 unsafeSR : (num : Num a) => Semiring a num
+unsafeSR = MkSemiring
+  unsafeRefl
+  unsafeRefl
+  unsafeRefl
+  unsafeRefl
+  unsafeRefl
+  unsafeRefl
+  unsafeRefl
+  unsafeRefl
+
 export
 Ring Bits8 %search where
-  r_plusAssociative     = unsafeRefl
-  r_plusCommutative     = unsafeRefl
-  r_plusZeroLeftNeutral = unsafeRefl
-  plusNegLeftZero       = unsafeRefl
-  r_multAssociative     = unsafeRefl
-  r_multCommutative     = unsafeRefl
-  r_multOneLeftNeutral  = unsafeRefl
-  r_leftDistributive    = unsafeRefl
-  minusIsPlusNeg        = unsafeRefl
+  rsr             = unsafeSR
+  plusNegLeftZero = unsafeRefl
+  minusIsPlusNeg  = unsafeRefl
 
 export
 Ring Bits16 %search where
-  r_plusAssociative     = unsafeRefl
-  r_plusCommutative     = unsafeRefl
-  r_plusZeroLeftNeutral = unsafeRefl
-  plusNegLeftZero       = unsafeRefl
-  r_multAssociative     = unsafeRefl
-  r_multCommutative     = unsafeRefl
-  r_multOneLeftNeutral  = unsafeRefl
-  r_leftDistributive    = unsafeRefl
-  minusIsPlusNeg        = unsafeRefl
+  rsr             = unsafeSR
+  plusNegLeftZero = unsafeRefl
+  minusIsPlusNeg  = unsafeRefl
 
 export
 Ring Bits32 %search where
-  r_plusAssociative     = unsafeRefl
-  r_plusCommutative     = unsafeRefl
-  r_plusZeroLeftNeutral = unsafeRefl
-  plusNegLeftZero       = unsafeRefl
-  r_multAssociative     = unsafeRefl
-  r_multCommutative     = unsafeRefl
-  r_multOneLeftNeutral  = unsafeRefl
-  r_leftDistributive    = unsafeRefl
-  minusIsPlusNeg        = unsafeRefl
+  rsr             = unsafeSR
+  plusNegLeftZero = unsafeRefl
+  minusIsPlusNeg  = unsafeRefl
 
 export
 Ring Bits64 %search where
-  r_plusAssociative     = unsafeRefl
-  r_plusCommutative     = unsafeRefl
-  r_plusZeroLeftNeutral = unsafeRefl
-  plusNegLeftZero       = unsafeRefl
-  r_multAssociative     = unsafeRefl
-  r_multCommutative     = unsafeRefl
-  r_multOneLeftNeutral  = unsafeRefl
-  r_leftDistributive    = unsafeRefl
-  minusIsPlusNeg        = unsafeRefl
+  rsr             = unsafeSR
+  plusNegLeftZero = unsafeRefl
+  minusIsPlusNeg  = unsafeRefl
 
 export
 Ring Int8 %search where
-  r_plusAssociative     = unsafeRefl
-  r_plusCommutative     = unsafeRefl
-  r_plusZeroLeftNeutral = unsafeRefl
-  plusNegLeftZero       = unsafeRefl
-  r_multAssociative     = unsafeRefl
-  r_multCommutative     = unsafeRefl
-  r_multOneLeftNeutral  = unsafeRefl
-  r_leftDistributive    = unsafeRefl
-  minusIsPlusNeg        = unsafeRefl
+  rsr             = unsafeSR
+  plusNegLeftZero = unsafeRefl
+  minusIsPlusNeg  = unsafeRefl
 
 export
 Ring Int16 %search where
-  r_plusAssociative     = unsafeRefl
-  r_plusCommutative     = unsafeRefl
-  r_plusZeroLeftNeutral = unsafeRefl
-  plusNegLeftZero       = unsafeRefl
-  r_multAssociative     = unsafeRefl
-  r_multCommutative     = unsafeRefl
-  r_multOneLeftNeutral  = unsafeRefl
-  r_leftDistributive    = unsafeRefl
-  minusIsPlusNeg        = unsafeRefl
+  rsr             = unsafeSR
+  plusNegLeftZero = unsafeRefl
+  minusIsPlusNeg  = unsafeRefl
 
 export
 Ring Int32 %search where
-  r_plusAssociative     = unsafeRefl
-  r_plusCommutative     = unsafeRefl
-  r_plusZeroLeftNeutral = unsafeRefl
-  plusNegLeftZero       = unsafeRefl
-  r_multAssociative     = unsafeRefl
-  r_multCommutative     = unsafeRefl
-  r_multOneLeftNeutral  = unsafeRefl
-  r_leftDistributive    = unsafeRefl
-  minusIsPlusNeg        = unsafeRefl
+  rsr             = unsafeSR
+  plusNegLeftZero = unsafeRefl
+  minusIsPlusNeg  = unsafeRefl
 
 export
 Ring Int64 %search where
-  r_plusAssociative     = unsafeRefl
-  r_plusCommutative     = unsafeRefl
-  r_plusZeroLeftNeutral = unsafeRefl
-  plusNegLeftZero       = unsafeRefl
-  r_multAssociative     = unsafeRefl
-  r_multCommutative     = unsafeRefl
-  r_multOneLeftNeutral  = unsafeRefl
-  r_leftDistributive    = unsafeRefl
-  minusIsPlusNeg        = unsafeRefl
+  rsr             = unsafeSR
+  plusNegLeftZero = unsafeRefl
+  minusIsPlusNeg  = unsafeRefl
 
 export
 Ring Int %search where
-  r_plusAssociative     = unsafeRefl
-  r_plusCommutative     = unsafeRefl
-  r_plusZeroLeftNeutral = unsafeRefl
-  plusNegLeftZero       = unsafeRefl
-  r_multAssociative     = unsafeRefl
-  r_multCommutative     = unsafeRefl
-  r_multOneLeftNeutral  = unsafeRefl
-  r_leftDistributive    = unsafeRefl
-  minusIsPlusNeg        = unsafeRefl
+  rsr             = unsafeSR
+  plusNegLeftZero = unsafeRefl
+  minusIsPlusNeg  = unsafeRefl
 
 export
 Ring Integer %search where
-  r_plusAssociative     = unsafeRefl
-  r_plusCommutative     = unsafeRefl
-  r_plusZeroLeftNeutral = unsafeRefl
-  plusNegLeftZero       = unsafeRefl
-  r_multAssociative     = unsafeRefl
-  r_multCommutative     = unsafeRefl
-  r_multOneLeftNeutral  = unsafeRefl
-  r_leftDistributive    = unsafeRefl
-  minusIsPlusNeg        = unsafeRefl
+  rsr             = unsafeSR
+  plusNegLeftZero = unsafeRefl
+  minusIsPlusNeg  = unsafeRefl

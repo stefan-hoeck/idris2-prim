@@ -42,3 +42,5 @@ modules = Algebra.CommutativeMonoid
         , Data.Prim.Ord
         , Data.Prim.String
         , Data.Trichotomy
+
+        , Syntax.Total

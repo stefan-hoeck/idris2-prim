@@ -98,6 +98,14 @@ irrefl x = case trichotomy m m of
 --          Transitivities
 --------------------------------------------------------------------------------
 
+public export
+0 LTE : (lt : a -> a -> Type) -> a -> a -> Type
+LTE lt x y = Either (lt x y) (x === y)
+
+public export
+0 NEQ : (lt : a -> a -> Type) -> a -> a -> Type
+NEQ lt x y = Either (lt x y) (lt y x)
+
 namespace LT
 
   ||| This is an alias for `transLT`
@@ -107,18 +115,12 @@ namespace LT
 
 ||| `k === m` and `m /= n` implies `k /= n`.
 export
-0 trans_EQ_NEQ :  Total a lt
-               => k === m
-               -> Either (lt m n) (lt n m)
-               -> Either (lt k n) (lt n k)
+0 trans_EQ_NEQ : Total a lt => k === m -> NEQ lt m n -> NEQ lt k n
 trans_EQ_NEQ eqv neq  = rewrite eqv in neq
 
 ||| `k === m` and `m /= n` implies `k /= n`.
 export
-0 trans_NEQ_EQ :  Total a lt
-               => Either (lt k m) (lt m k)
-               -> m === n
-               -> Either (lt k n) (lt n k)
+0 trans_NEQ_EQ : Total a lt => NEQ lt k m -> m === n -> NEQ lt k n
 trans_NEQ_EQ neq eqv = rewrite (sym eqv) in neq
 
 ||| `k < m` and `m === n` implies `k < n`
@@ -133,12 +135,12 @@ trans_EQ_LT eqv q = rewrite eqv in q
 
 ||| `k <= m` and `m < n` implies `k < n`
 export
-0 trans_LTE_LT : Total a lt => Either (lt k m) (k === m) -> lt m n -> lt k n
+0 trans_LTE_LT : Total a lt => LTE lt k m -> lt m n -> lt k n
 trans_LTE_LT x y = either (`trans` y) (`trans_EQ_LT` y) x
 
 ||| `k < m` and `m <= n` implies `k < n`
 export
-0 trans_LT_LTE : Total a lt => lt k m -> Either (lt m n) (m === n) -> lt k n
+0 trans_LT_LTE : Total a lt => lt k m -> LTE lt m n -> lt k n
 trans_LT_LTE x = either (trans x) (trans_LT_EQ x)
 
 ||| `k > m` and `m === n` implies `k > n`
@@ -153,12 +155,12 @@ trans_EQ_GT eqv q = rewrite eqv in q
 
 ||| `k >= m` and `m > n` implies `k > n`
 export
-0 trans_GTE_GT : Total a lt => Either (lt m k) (m === k) -> lt n m -> lt n k
+0 trans_GTE_GT : Total a lt => LTE lt m k -> lt n m -> lt n k
 trans_GTE_GT x y = either (trans y) (\v => trans_EQ_GT (sym v) y) x
 
 ||| `k > m` and `m >= n` implies `k > n`
 export
-0 trans_GT_GTE : Total a lt => lt m k -> Either (lt n m) (n === m) -> lt n k
+0 trans_GT_GTE : Total a lt => lt m k -> LTE lt n m -> lt n k
 trans_GT_GTE x (Left y)  = trans y x
 trans_GT_GTE x (Right y) = trans_GT_EQ x (sym y)
 
@@ -171,76 +173,52 @@ namespace LTE
 
   ||| `<=` is transitive.
   export
-  0 trans :  Total a lt
-          => Either (lt k m) (k === m)
-          -> Either (lt m n) (m === n)
-          -> Either (lt k n) (k === n)
+  0 trans : Total a lt => LTE lt k m -> LTE lt m n -> LTE lt k n
   trans (Left x)  y         = Left (trans_LT_LTE x y)
   trans (Right x) (Left y)  = Left (trans_EQ_LT x y)
   trans (Right x) (Right y) = Right (trans x y)
 
   ||| `<=` is antisymmetric.
   export
-  0 antisym :  Total a lt
-            => Either (lt m n) (m === n)
-            -> Either (lt n m) (m === n)
-            -> m === n
+  0 antisym : Total a lt => LTE lt m n -> LTE lt n m -> m === n
   antisym (Right x) _         = x
-  antisym (Left x)  (Right y) = y
+  antisym (Left x)  (Right y) = sym y
   antisym (Left x)  (Left y)  = void (irrefl $ trans x y)
 
 ||| `k <= m` and `m === n` implies `k <= n`
 export
-0 trans_LTE_EQ :  Total a lt
-               => Either (lt k m) (k === m)
-               -> m === n
-               -> Either (lt k n) (k === n)
+0 trans_LTE_EQ : Total a lt => LTE lt k m -> m === n -> LTE lt k n
 trans_LTE_EQ lte eq = trans lte (Right eq)
 
 ||| `k === m` and `m <= n` implies `(k <= n)`
 export
-0 trans_EQ_LTE :  Total a lt
-               => k === m
-               -> Either (lt m n) (m === n)
-               -> Either (lt k n) (k === n)
+0 trans_EQ_LTE : Total a lt => k === m -> LTE lt m n -> LTE lt k n
 trans_EQ_LTE eq lte = trans (Right eq) lte
 
 namespace GTE
 
   ||| `>=` is transitive.
   export
-  0 trans :  Total a lt
-          => Either (lt m k) (m === k)
-          -> Either (lt n m) (n === m)
-          -> Either (lt n k) (n === k)
+  0 trans : Total a lt => LTE lt m k -> LTE lt n m -> LTE lt n k
   trans (Left x)  y         = Left (trans_GT_GTE x y)
   trans (Right x) (Left y)  = Left (trans_EQ_GT (sym x) y)
   trans (Right x) (Right y) = Right (trans y x)
 
   ||| `>=` is antisymmetric.
   export
-  0 antisym :  Total a lt
-            => Either (lt n m) (m === n)
-            -> Either (lt m n) (m === n)
-            -> m === n
-  antisym (Right x) _         = x
+  0 antisym : Total a lt => LTE lt n m -> LTE lt m n -> m === n
+  antisym (Right x) _         = sym x
   antisym (Left x)  (Right y) = y
   antisym (Left x)  (Left y)  = void (irrefl $ trans x y)
 
 ||| `k >= m` and `m === n` implies `k >= n`
 export
-0 trans_GTE_EQ :  Total a lt
-               => Either (lt m k) (m === k)
-               -> m === n
-               -> Either (lt n k) (n === k)
+0 trans_GTE_EQ : Total a lt => LTE lt m k -> m === n -> LTE lt n k
 trans_GTE_EQ gte eq = trans gte (Right $ sym eq)
 
 ||| `k === m` and `m <= n` implies `(k <= n)`
 export
-0 trans_EQ_GTE :  Total a lt
-               => k === m
-               -> Either (lt n m) (n === m)
-               -> Either (lt n k) (n === k)
+0 trans_EQ_GTE : Total a lt => k === m -> LTE lt n m -> LTE lt n k
 trans_EQ_GTE eq gte = trans (Right $ sym eq) gte
 
 --------------------------------------------------------------------------------
@@ -265,12 +243,12 @@ LT_not_EQ isLT isEQ = case trichotomy m n of
 
 ||| `m < n` implies `Not (m >= n)`.
 export
-0 LT_not_GTE : Total a lt => lt m n -> Not (Either (lt n m) (n === m))
+0 LT_not_GTE : Total a lt => lt m n -> Not (LTE lt n m)
 LT_not_GTE l = either (LT_not_GT l) (\e => LT_not_EQ l (sym e))
 
 ||| `Not (m < n)` implies `m >= n`.
 export
-0 Not_LT_to_GTE : Total a lt => Not (lt m n) -> Either (lt n m) (n === m)
+0 Not_LT_to_GTE : Total a lt => Not (lt m n) -> LTE lt n m
 Not_LT_to_GTE f = case trichotomy m n of
   LT x _ _ => void (f x)
   EQ _ x _ => Right (sym x)
@@ -288,12 +266,12 @@ EQ_not_GT isEQ = EQ_not_LT (sym isEQ)
 
 ||| `m === n` implies `Not (m /= n)`.
 export
-0 EQ_not_NEQ : Total a lt => m === n -> Not (Either (lt m n) (lt n m))
+0 EQ_not_NEQ : Total a lt => m === n -> Not (NEQ lt m n)
 EQ_not_NEQ isEQ = either (EQ_not_LT isEQ) (EQ_not_GT isEQ)
 
 ||| `Not (m < n)` implies `m /= n`.
 export
-0 Not_EQ_to_NEQ : Total a lt => Not (m === n) -> Either (lt m n) (lt n m)
+0 Not_EQ_to_NEQ : Total a lt => Not (m === n) -> NEQ lt m n
 Not_EQ_to_NEQ f = case trichotomy m n of
   LT x _ _ => Left x
   EQ _ x _ => void (f x)
@@ -311,12 +289,12 @@ GT_not_EQ = flip EQ_not_GT
 
 ||| `m > n` implies `Not (m <= n)`.
 export
-0 GT_not_LTE : Total a lt => lt n m -> Not (Either (lt m n) (m === n))
+0 GT_not_LTE : Total a lt => lt n m -> Not (LTE lt m n)
 GT_not_LTE gt = either (GT_not_LT gt) (GT_not_EQ gt)
 
 ||| `Not (m > n)` implies `m <= n`.
 export
-0 Not_GT_to_LTE : Total a lt => Not (lt n m) -> Either (lt m n) (m === n)
+0 Not_GT_to_LTE : Total a lt => Not (lt n m) -> LTE lt m n
 Not_GT_to_LTE f = case trichotomy m n of
   LT x _ _ => Left x
   EQ _ x _ => Right x
@@ -324,12 +302,12 @@ Not_GT_to_LTE f = case trichotomy m n of
 
 ||| `m <= n` implies `Not (m > n)`.
 export
-0 LTE_not_GT : Total a lt => (Either (lt m n) (m === n)) -> Not (lt n m)
+0 LTE_not_GT : Total a lt => LTE lt m n -> Not (lt n m)
 LTE_not_GT = either LT_not_GT EQ_not_GT
 
 ||| `Not (m <= n)` implies `m > n`.
 export
-0 Not_LTE_to_GT : Total a lt => Not (Either (lt m n) (m === n)) -> lt n m
+0 Not_LTE_to_GT : Total a lt => Not (LTE lt m n) -> lt n m
 Not_LTE_to_GT f = case trichotomy m n of
   LT x _ _ => void (f $ Left x)
   EQ _ x _ => void (f $ Right x)
@@ -337,32 +315,26 @@ Not_LTE_to_GT f = case trichotomy m n of
 
 ||| `m <= n` and `m >= n` implies `m === n`.
 export
-0 LTE_and_GTE_to_EQ :  Total a lt
-                    => Either (lt m n) (m === n)
-                    -> Either (lt n m) (n === m)
-                    -> m === n
+0 LTE_and_GTE_to_EQ : Total a lt => LTE lt m n -> LTE lt n m -> m === n
 LTE_and_GTE_to_EQ (Left x)  (Right y) = sym y
 LTE_and_GTE_to_EQ (Right x) _         = x
 LTE_and_GTE_to_EQ (Left x)  (Left y)  = void (LT_not_GT x y)
 
 ||| `m <= n` and `m /= n` implies `m < n`.
 export
-0 LTE_and_NEQ_to_LT :  Total a lt
-                    => Either (lt m n) (m === n)
-                    -> Either (lt m n) (lt n m)
-                    -> lt m n
+0 LTE_and_NEQ_to_LT : Total a lt => LTE lt m n -> NEQ lt m n -> lt m n
 LTE_and_NEQ_to_LT (Left x)  _         = x
 LTE_and_NEQ_to_LT (Right _) (Left x)  = x
 LTE_and_NEQ_to_LT (Right x) (Right y) = void (EQ_not_GT x y)
 
 ||| `m /= n` implies `Not (m === n)`.
 export
-0 NEQ_not_EQ : Total a lt => Either (lt m n) (lt n m) -> Not (m === n)
+0 NEQ_not_EQ : Total a lt => NEQ lt m n -> Not (m === n)
 NEQ_not_EQ = either LT_not_EQ GT_not_EQ
 
 ||| `Not (m /= n)` implies `m === n`.
 export
-0 Not_NEQ_to_EQ : Total a lt => Not (Either (lt m n) (lt n m)) -> m === n
+0 Not_NEQ_to_EQ : Total a lt => Not (NEQ lt m n) -> m === n
 Not_NEQ_to_EQ f = case trichotomy m n of
   LT x _ _ => void (f $ Left x)
   EQ _ x _ => x
@@ -370,30 +342,24 @@ Not_NEQ_to_EQ f = case trichotomy m n of
 
 ||| `m /= n` and `m <= n` implies `m < n`.
 export
-0 NEQ_and_LTE_to_LT :  Total a lt
-                    => Either (lt m n) (lt n m)
-                    -> Either (lt m n) (m === n)
-                    -> lt m n
+0 NEQ_and_LTE_to_LT : Total a lt => NEQ lt m n -> LTE lt m n -> lt m n
 NEQ_and_LTE_to_LT = flip LTE_and_NEQ_to_LT
 
 ||| `m /= n` and `m <= n` implies `m < n`.
 export
-0 NEQ_and_GTE_to_GT :  Total a lt
-                    => Either (lt m n) (lt n m)
-                    -> Either (lt n m) (n === m)
-                    -> lt n m
+0 NEQ_and_GTE_to_GT : Total a lt => NEQ lt m n -> LTE lt n m -> lt n m
 NEQ_and_GTE_to_GT (Right x) _         = x
 NEQ_and_GTE_to_GT (Left _)  (Left y)  = y
 NEQ_and_GTE_to_GT (Left x)  (Right y) = void (GT_not_EQ x y)
 
 ||| `m >= n` implies `Not (m < n)`.
 export
-0 GTE_not_LT : Total a lt => Either (lt n m) (n === m) -> Not (lt m n)
+0 GTE_not_LT : Total a lt => LTE lt n m -> Not (lt m n)
 GTE_not_LT = either GT_not_LT EQ_not_GT
 
 ||| `Not (m >= n)` implies `m < n`.
 export
-0 Not_GTE_to_LT : Total a lt => Not (Either (lt n m) (n === m)) -> lt m n
+0 Not_GTE_to_LT : Total a lt => Not (LTE lt n m) -> lt m n
 Not_GTE_to_LT f = case trichotomy m n of
   LT x _ _ => x
   EQ _ x _ => void (f $ Right (sym x))
@@ -401,16 +367,10 @@ Not_GTE_to_LT f = case trichotomy m n of
 
 ||| `m >= n` and `m <= n` implies `m === n`.
 export
-0 GTE_and_LTE_to_EQ :  Total a lt
-                    => Either (lt n m) (n === m)
-                    -> Either (lt m n) (m === n)
-                    -> m === n
+0 GTE_and_LTE_to_EQ : Total a lt => LTE lt n m -> LTE lt m n -> m === n
 GTE_and_LTE_to_EQ = flip LTE_and_GTE_to_EQ
 
 ||| `m >= n` and `m /= n` implies `m > n`.
 export
-0 GTE_and_NEQ_to_GT :  Total a lt
-                    => Either (lt n m) (n === m)
-                    -> Either (lt m n) (lt n m)
-                    -> lt n m
+0 GTE_and_NEQ_to_GT : Total a lt => LTE lt n m -> NEQ lt m n -> lt n m
 GTE_and_NEQ_to_GT = flip NEQ_and_GTE_to_GT
