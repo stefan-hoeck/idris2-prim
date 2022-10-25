@@ -229,6 +229,7 @@ multPos p (EQ q) = EQ $ Calc $
   ~~ m * 0 ..< multZeroRightAbsorbs @{OSSR}
   ~~ m * n ... cong (m*) q
 
+||| Multiplication with a positive number preserves an inequality.
 export
 0 multPosLeft :
      {num : _}
@@ -239,6 +240,7 @@ export
 multPosLeft p (LT q) = LT $ multGT {a} p q
 multPosLeft _ (EQ q) = EQ $ cong (n *) q
 
+||| Multiplication with a positive number preserves an inequality.
 export
 0 multPosRight :
      {num : _}
@@ -252,6 +254,8 @@ multPosRight x rel = CalcAny $
   <! n * m ... multPosLeft x rel
   <~ m * n .=. multCommutative @{OSSR}
 
+||| Multiplication with a non-negative number preserves but
+||| weakens an inequality.
 export
 0 multNonNegLeft :
      {num : _}
@@ -267,6 +271,8 @@ multNonNegLeft (EQ p) y = EQ $ Calc $
   ~~ 0 * m ..< multZeroLeftAbsorbs @{OSSR}
   ~~ n * m ... cong (*m) p
 
+||| Multiplication with a non-negative number preserves but
+||| weakens an inequality.
 export
 0 multNonNegRight :
      {num : _}
@@ -280,6 +286,7 @@ multNonNegRight x rel = CalcAny $
   <! n * m ... multNonNegLeft x rel
   <~ m * n .=. multCommutative @{OSSR}
 
+||| From `n * k < n * m` and `0 < n` follows `k < m`. Likewise for `<=`.
 export
 0 solveMultPosLeft :
      {num : _}
@@ -308,6 +315,62 @@ solveMultPosRight x rel =
         <! m * n ... rel
         <~ n * m .=. multCommutative @{OSSR}
    in solveMultPosLeft x rel'
+
+||| We can solve (in)equalities, with one side a multiplication
+||| with a positive number and the other equalling zero.
+export
+0 solveMultPosRightZero :
+     {num : _}
+  -> OrderedSemiring a num lt
+  => lt 0 n
+  -> Rel b lt 0 (m * n)
+  -> Rel b lt 0 m
+solveMultPosRightZero p rel = solveMultPosRight p $ CalcAny $
+  |~ 0 * n
+  <~ 0     .=. multZeroLeftAbsorbs @{OSSR}
+  <! m * n ... rel
+
+||| We can solve (in)equalities, with one side a multiplication
+||| with a positive number and the other equalling zero.
+export
+0 solveMultPosLeftZero :
+     {num : _}
+  -> OrderedSemiring a num lt
+  => lt 0 n
+  -> Rel b lt 0 (n * m)
+  -> Rel b lt 0 m
+solveMultPosLeftZero p rel = solveMultPosLeft p $ CalcAny $
+  |~ n * 0
+  <~ 0     .=. multZeroRightAbsorbs @{OSSR}
+  <! n * m ... rel
+
+||| We can solve (in)equalities, with one side a multiplication
+||| with a positive number and the other equalling one.
+export
+0 solveMultPosRightOne :
+     {num : _}
+  -> OrderedSemiring a num lt
+  => lt 0 n
+  -> Rel b lt n (m * n)
+  -> Rel b lt 1 m
+solveMultPosRightOne p rel = solveMultPosRight p $ CalcAny $
+  |~ 1 * n
+  <~ n     .=. multOneLeftNeutral @{OSSR}
+  <! m * n ... rel
+
+||| We can solve (in)equalities, with one side a multiplication
+||| with a positive number and the other equalling one.
+export
+0 solveMultPosLeftOne :
+     {num : _}
+  -> OrderedSemiring a num lt
+  => lt 0 n
+  -> Rel b lt n (n * m)
+  -> Rel b lt 1 m
+solveMultPosLeftOne p rel = solveMultPosLeft p $ CalcAny $
+  |~ n * 1
+  <~ n     .=. multOneRightNeutral @{OSSR}
+  <! n * m ... rel
 
 --------------------------------------------------------------------------------
 --          Nat Implementation

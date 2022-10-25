@@ -195,3 +195,153 @@ negateZeroGT rel = CalcAny $
   |~ 0
   <~ negate 0 .~. negZero @{ORR}
   <! negate n ... negate rel
+
+--------------------------------------------------------------------------------
+--          Multiplication in Inequalities
+--------------------------------------------------------------------------------
+
+||| Multiplication with a negative number inverts an inequality.
+export
+0 multNegLeft :
+     {neg : _}
+  -> OrderedRing a neg lt
+  => lt n 0
+  -> Rel b lt k m
+  -> Rel b lt (n * m) (n * k)
+multNegLeft p rel = negateNeg $ CalcAny $
+  |~ negate (n * k)
+  <~ negate n * k   .~. multNegLeft @{ORR}
+  <! negate n * m   ... multPosLeft (toLT $ negateZeroGT {a} $ LT p) rel
+  <~ negate (n * m) .=. multNegLeft @{ORR}
+
+||| Multiplication with a negative number inverts an inequality.
+export
+0 multNegRight :
+     {neg : _}
+  -> OrderedRing a neg lt
+  => lt n 0
+  -> Rel b lt k m
+  -> Rel b lt (m * n) (k * n)
+multNegRight p rel = CalcAny $
+  |~ m * n
+  <~ n * m .=. multCommutative @{ORSR}
+  <! n * k ... multNegLeft p rel
+  <~ k * n .=. multCommutative @{ORSR}
+
+||| Multiplication with a non-positive number inverts and
+||| weakens an inequality.
+export
+0 multNonPosLeft :
+     {num : _}
+  -> OrderedRing a num lt
+  => Rel b lt n 0
+  -> lt k m
+  -> Rel b lt (n * m) (n * k)
+multNonPosLeft (LT p) y = multNegLeft p (LT y)
+multNonPosLeft (EQ p) y = EQ $ Calc $
+  |~ n * m
+  ~~ 0 * m ... cong (*m) p
+  ~~ 0     ... multZeroLeftAbsorbs @{ORSR}
+  ~~ 0 * k ..< multZeroLeftAbsorbs @{ORSR}
+  ~~ n * k ..< cong (*k) p
+
+||| Multiplication with a non-positive number inverts and
+||| weakens an inequality.
+export
+0 multNonPosRight :
+     {num : _}
+  -> OrderedRing a num lt
+  => Rel b lt n 0
+  -> lt k m
+  -> Rel b lt (m * n) (k * n)
+multNonPosRight rel p = CalcAny $
+  |~ m * n
+  <~ n * m .=. multCommutative @{ORSR}
+  <! n * k ... multNonPosLeft rel p
+  <~ k * n .=. multCommutative @{ORSR}
+
+||| From `n * k < n * m` and `n < 0` follows `m < n`. Likewise for `<=`.
+export
+0 solveMultNegLeft :
+     {num : _}
+  -> OrderedRing a num lt
+  => lt n 0
+  -> Rel b lt (n * k) (n * m)
+  -> Rel b lt m k
+solveMultNegLeft q rel =
+  let q' := toLT $ negateZeroGT {a} (LT q)
+  in solveMultPosLeft q' $ CalcAny $
+    |~ negate n * m
+    <~ negate (n * m) .=. multNegLeft @{ORR}
+    <! negate (n * k) ... negate rel
+    <~ negate n * k   .~. multNegLeft @{ORR}
+
+||| From `k * n < m * n` and `n < 0` follows `m < n`. Likewise for `<=`.
+export
+0 solveMultNegRight :
+     {num : _}
+  -> OrderedRing a num lt
+  => lt n 0
+  -> Rel b lt (k * n) (m * n)
+  -> Rel b lt m k
+solveMultNegRight q rel = solveMultNegLeft q $ CalcAny $
+  |~ n * k
+  <~ k * n .=. multCommutative @{ORSR}
+  <! m * n ... rel
+  <~ n * m .=. multCommutative @{ORSR}
+
+||| We can solve (in)equalities, with one side a multiplication
+||| with a negative number and the other equalling zero.
+export
+0 solveMultNegRightZero :
+     {neg : _}
+  -> OrderedRing a neg lt
+  => lt n 0
+  -> Rel b lt 0 (m * n)
+  -> Rel b lt m 0
+solveMultNegRightZero p rel = solveMultNegRight p $ CalcAny $
+  |~ 0 * n
+  <~ 0     .=. multZeroLeftAbsorbs @{ORSR}
+  <! m * n ... rel
+
+||| We can solve (in)equalities, with one side a multiplication
+||| with a negative number and the other equalling zero.
+export
+0 solveMultNegLeftZero :
+     {neg : _}
+  -> OrderedRing a neg lt
+  => lt n 0
+  -> Rel b lt 0 (n * m)
+  -> Rel b lt m 0
+solveMultNegLeftZero p rel = solveMultNegLeft p $ CalcAny $
+  |~ n * 0
+  <~ 0     .=. multZeroRightAbsorbs @{ORSR}
+  <! n * m ... rel
+
+||| We can solve (in)equalities, with one side a multiplication
+||| with a negative number and the other equalling one.
+export
+0 solveMultNegRightOne :
+     {neg : _}
+  -> OrderedRing a neg lt
+  => lt n 0
+  -> Rel b lt n (m * n)
+  -> Rel b lt m 1
+solveMultNegRightOne p rel = solveMultNegRight p $ CalcAny $
+  |~ 1 * n
+  <~ n     .=. multOneLeftNeutral @{ORSR}
+  <! m * n ... rel
+
+||| We can solve (in)equalities, with one side a multiplication
+||| with a negative number and the other equalling one.
+export
+0 solveMultNegLeftOne :
+     {neg : _}
+  -> OrderedRing a neg lt
+  => lt n 0
+  -> Rel b lt n (n * m)
+  -> Rel b lt m 1
+solveMultNegLeftOne p rel = solveMultNegLeft p $ CalcAny $
+  |~ n * 1
+  <~ n     .=. multOneRightNeutral @{ORSR}
+  <! n * m ... rel
