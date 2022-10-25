@@ -1,6 +1,6 @@
 module Algebra.Solver.Semigroup
 
-import Algebra.Semigroup
+import Algebra.Monoid
 import Data.List1
 import Syntax.PreorderReasoning
 

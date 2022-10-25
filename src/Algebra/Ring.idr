@@ -289,10 +289,10 @@ negDistributes =
 --------------------------------------------------------------------------------
 
 r_multZeroLeftAbsorbs =
-  Calc $
-    |~ 0 * n
-    ~~ n * 0 ... multCommutative
-    ~~ 0     ... multZeroRightAbsorbs
+  solvePlusZeroRight $ Calc $
+    |~ 0 * n + 0 * n
+    ~~ (0 + 0) * n       ..< rightDistributive
+    ~~ 0 * n             ... cong (* n) plusZeroLeftNeutral
 
 ||| Zero is an absorbing element of multiplication.
 export

@@ -9,15 +9,44 @@ import public Syntax.PreorderReasoning
 %default total
 
 prefix 1  |~
-infixl 0  ~~
-infixl 0  <~
+infixl 0  <~,<!
 infix  1  ...,.~.,.<.,.=.
+
+public export
+data Rel : (strict : Bool) -> (a -> a -> Type) -> a -> a -> Type where
+  LT : {lt : a -> a -> Type} -> lt x y -> Rel b lt x y
+  EQ : {lt : a -> a -> Type} -> x === y -> Rel False lt x y
+
+export
+0 transL : Total a lt => Rel b1 lt x y -> Rel b2 lt y z -> Rel b1 lt x z
+transL (LT p1) (LT p2) = LT $ trans p1 p2
+transL (LT p1) (EQ p2) = LT $ trans_LT_EQ p1 p2
+transL (EQ p1) (LT p2) = LT $ trans_EQ_LT p1 p2
+transL (EQ p1) (EQ p2) = EQ $ trans p1 p2
+
+export
+0 transR : Total a lt => Rel b1 lt x y -> Rel b2 lt y z -> Rel b2 lt x z
+transR (LT p1) (LT p2) = LT $ trans p1 p2
+transR (LT p1) (EQ p2) = LT $ trans_LT_EQ p1 p2
+transR (EQ p1) (LT p2) = LT $ trans_EQ_LT p1 p2
+transR (EQ p1) (EQ p2) = EQ $ trans p1 p2
+
+export
+0 toLTE : Rel b lt x y -> LTE lt x y
+toLTE (LT p) = Left p
+toLTE (EQ p) = Right p
+
+export
+0 toLT : Rel True lt x y -> lt x y
+toLT (LT p) = p
+toLT (EQ p) impossible
 
 ||| A single step in deducing a transitive chain of inequalities.
 |||
 ||| Additional smart constructors are `(.=.)`, `(.<.)`, and `(.~.)`.
-data Step : (lt : a -> a -> Type) -> (x,y : a) -> Type where
-  (...) : (0 y : a) -> (0 prf : LTE lt x y) -> Step lt x y
+public export
+data Step : (str : Bool) -> (lt : a -> a -> Type) -> (x,y : a) -> Type where
+  (...) : (0 y : a) -> (0 prf : Rel str lt x y) -> Step str lt x y
 
 ||| A transitive chain of inequalities.
 |||
@@ -26,55 +55,66 @@ data Step : (lt : a -> a -> Type) -> (x,y : a) -> Type where
 ||| that at least of the deduction steps is strict, we can even use `CalcLT` to
 ||| derive a value of type `lt x y`.
 public export
-data FastDerivation : (lt : a -> a -> Type) -> (x : a) -> (y : a) -> Type where
-  (|~) : (x : a) -> FastDerivation lt x x
-  (<~) : {x, y : a}
-         -> FastDerivation lt x y -> {z : a} -> (step : Step lt y z)
-         -> FastDerivation lt x z
+data FastDerivation :  (strict : Bool)
+                    -> (lt : a -> a -> Type)
+                    -> (x : a)
+                    -> (y : a)
+                    -> Type where
+  (|~) : (x : a) -> FastDerivation False lt x x
 
-||| Proof that a `FastDerivation` constains at list one strict
-||| inequality.
-data HasLT : (stps : FastDerivation lt x y) -> Type where
-  Here  : HasLT (stps <~ _ ... Left p)
-  There : HasLT stps -> HasLT (stps <~ stp)
+  (<~) :  FastDerivation b lt x y
+       -> (step : Step c lt y z)
+       -> FastDerivation b lt x z
+
+  (<!) :  FastDerivation b lt x y
+       -> (step : Step c lt y z)
+       -> FastDerivation c lt x z
 
 ||| Convenience alias for `(...)` to be used with a proof of equality.
 public export
-0 (.=.) : (0 y : a) -> (0 prf : x === y) -> Step lt x y
-y .=. prf = y ... Right prf
+0 (.=.) : (0 y : a) -> (0 prf : x === y) -> Step False lt x y
+y .=. prf = y ... EQ prf
 
 ||| Convenience alias for `(...)` to be used with a proof of equality
 ||| with the arguments switched.
 public export
-0 (.~.) : (0 y : a) -> (0 prf : y === x) -> Step lt x y
+0 (.~.) : (0 y : a) -> (0 prf : y === x) -> Step False lt x y
 y .~. prf = y .=. sym prf
 
 ||| Convenience alias for `(...)` to be used with a proof of strict
 ||| inequality (`x` is strictly less than `y`).
 public export
-0 (.<.) : (0 y : a) -> (0 prf : lt x y) -> Step lt x y
-y .<. prf = y ... Left prf
+0 (.<.) : (0 y : a) -> (0 prf : lt x y) -> Step True lt x y
+y .<. prf = y ... LT prf
 
 ||| Given a total order `lt`, we can use this to derive a `LTE lt x y`
 ||| from a transitive chain (of type `FastDerivation lt x y`) of
 ||| inequalities.
-public export
+export
 0 CalcLTE :
      Total a lt
-  => FastDerivation lt x y
-  -> LTE lt x y
-CalcLTE (|~ _)               = Right Refl
-CalcLTE (stps <~ _  ... prf) = trans (CalcLTE stps) prf
+  => FastDerivation b lt x z
+  -> LTE lt x z
+CalcLTE (|~ _)            = Right Refl
+CalcLTE (stps <~ _ ... stp) = trans (CalcLTE stps) (toLTE stp)
+CalcLTE (stps <! _ ... stp) = trans (CalcLTE stps) (toLTE stp)
 
-||| Like `CalcLT` but for deriving string inequalities. In order
-||| to do so, at least one inequality in the `FastDerivation lt x y`
-||| must be strict (as witnessed by the proof of type `HasLT`).
+||| Like `CalcLT` but for deriving strict inequalities.
 public export
 0 CalcLT :
      {lt : a -> a -> Type}
   -> Total a lt
-  => (stps : FastDerivation lt x y)
-  -> (0 p  : HasLT stps)
-  => lt x y
-CalcLT (stps <~ _ ... Left x) {p = Here}    = trans_LTE_LT (CalcLTE stps) x
-CalcLT (stps <~ _ ... x)      {p = There q} = trans_LT_LTE (CalcLT stps) x
+  => (stps : FastDerivation True lt x y)
+  -> lt x y
+CalcLT (stps <~ _ ... stp) = trans_LT_LTE (CalcLT  stps) (toLTE stp)
+CalcLT (stps <! _ ... stp) = trans_LTE_LT (CalcLTE stps) (toLT stp)
+
+export
+0 CalcAny :
+     Total a lt
+  => FastDerivation b lt x z
+  -> Rel b lt x z
+CalcAny (|~ x)           = EQ Refl
+CalcAny (y <~ _ ... stp) = transL (CalcAny y) stp
+CalcAny (y <! _ ... stp) = transR (CalcAny y) stp
+

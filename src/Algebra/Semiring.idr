@@ -1,7 +1,7 @@
 module Algebra.Semiring
 
 import Data.Nat
-import public Algebra.CommutativeMonoid
+import public Algebra.Monoid
 import Syntax.PreorderReasoning
 
 %default total
@@ -283,38 +283,44 @@ public export %inline
 [MultMon] Num a => Monoid a using MultSem where
   neutral = 1
 
-export
-[SRPlusCMon] {num : _} -> Semiring a num => CommutativeMonoid a PlusMon using PlusMon where
-  cm_appendAssociative = plusAssociative
-  cm_appendLeftNeutral = plusZeroLeftNeutral
-  cm_appendCommutative = plusCommutative
+0 sr_semiPlus : {num : _} -> Semiring a num => SemigroupV a PlusSem
+sr_semiPlus = MkSemigroupV plusAssociative
 
 export
-SRPlusMon : {num : _} -> Semiring a num => MonoidV a PlusMon
+0 SRPlusCMon : {num : _} -> Semiring a num => CommutativeMonoid a PlusMon
+SRPlusCMon = MkCMonoid
+  (MkCSemigroup sr_semiPlus plusCommutative)
+  (MkMonoidV  sr_semiPlus plusZeroLeftNeutral plusZeroRightNeutral)
+
+export
+0 SRPlusMon : {num : _} -> Semiring a num => MonoidV a PlusMon
 SRPlusMon = CMonMon @{SRPlusCMon}
 
 export
-SRPlusCSem : {num : _} -> Semiring a num => CommutativeSemigroup a PlusSem
+0 SRPlusCSem : {num : _} -> Semiring a num => CommutativeSemigroup a PlusSem
 SRPlusCSem = CMonCSem @{SRPlusCMon}
 
 export
-SRPlusSem : {num : _} -> Semiring a num => SemigroupV a PlusSem
+0 SRPlusSem : {num : _} -> Semiring a num => SemigroupV a PlusSem
 SRPlusSem = CMonSem @{SRPlusCMon}
 
-export
-[SRMultCMon] {num : _} -> Semiring a num => CommutativeMonoid a MultMon using MultMon where
-  cm_appendAssociative = multAssociative
-  cm_appendLeftNeutral = multOneLeftNeutral
-  cm_appendCommutative = multCommutative
+0 sr_semiMult : {num : _} -> Semiring a num => SemigroupV a MultSem
+sr_semiMult = MkSemigroupV multAssociative
 
 export
-SRMultMon : {num : _} -> Semiring a num => MonoidV a MultMon
+0 SRMultCMon : {num : _} -> Semiring a num => CommutativeMonoid a MultMon
+SRMultCMon = MkCMonoid
+  (MkCSemigroup sr_semiMult multCommutative)
+  (MkMonoidV  sr_semiMult multOneLeftNeutral multOneRightNeutral)
+
+export
+0 SRMultMon : {num : _} -> Semiring a num => MonoidV a MultMon
 SRMultMon = CMonMon @{SRMultCMon}
 
 export
-SRMultCSem : {num : _} -> Semiring a num => CommutativeSemigroup a MultSem
+0 SRMultCSem : {num : _} -> Semiring a num => CommutativeSemigroup a MultSem
 SRMultCSem = CMonCSem @{SRMultCMon}
 
 export
-SRMultSem : {num : _} -> Semiring a num => SemigroupV a MultSem
+0 SRMultSem : {num : _} -> Semiring a num => SemigroupV a MultSem
 SRMultSem = CMonSem @{SRMultCMon}

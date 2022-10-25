@@ -9,11 +9,9 @@ license    = "BSD-3 Clause"
 sourcedir  = "src"
 depends    = base    >= 0.5.1
 
-modules = Algebra.CommutativeMonoid
-        , Algebra.CommutativeSemigroup
-        , Algebra.Monoid
+modules = Algebra.Monoid
+        , Algebra.OrderedSemiring
         , Algebra.Ring
-        , Algebra.Semigroup
         , Algebra.Semiring
 
         , Algebra.Solver.CommutativeMonoid

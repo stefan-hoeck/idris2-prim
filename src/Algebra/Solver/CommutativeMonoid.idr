@@ -1,6 +1,6 @@
 module Algebra.Solver.CommutativeMonoid
 
-import public Algebra.CommutativeMonoid
+import public Algebra.Monoid
 import public Algebra.Solver.Prod
 import Syntax.PreorderReasoning
 
@@ -60,7 +60,7 @@ pnorm (Lit x) = Calc $
 pnorm (Var x y) = Calc $
  |~ x
  ~~ emprod (fromVar y)             ..< pvar as y
- ~~ neutral <+> emprod (fromVar y) ..< cm_appendLeftNeutral
+ ~~ neutral <+> emprod (fromVar y) ..< appendLeftNeutral
 
 pnorm Neutral = Calc $
   |~ neutral
