@@ -2,6 +2,7 @@
 type   = "local"
 path   = "."
 ipkg   = "prim.ipkg"
+test   = "test/test.ipkg"
 
 [custom.all.prim-test]
 type   = "local"
