@@ -84,7 +84,7 @@ comp m n = case prim__lt_Integer m n of
     x => EQ (eqNotLT unsafeRefl) (unsafeRefl) (eqNotLT unsafeRefl)
   x => LT (LT unsafeRefl) (ltNotEQ $ LT unsafeRefl) (ltNotGT $ LT unsafeRefl)
 
-export
+export %inline
 Total Integer (<) where
   trichotomy   = comp
   transLT p q  = strictLT p $ strictLT q $ LT unsafeRefl
@@ -92,15 +92,6 @@ Total Integer (<) where
 --------------------------------------------------------------------------------
 --          Arithmetics
 --------------------------------------------------------------------------------
-
-replace' : (0 p : a -> Type) -> (0 _ : x = y) -> p x -> p y
-replace' p prf px = replace {p} prf px
-
-derive :  {0 a,b : Type}
-       -> (x : a)
-       -> FastDerivation a b
-       -> b
-derive x z = case Calc z of Refl => x
 
 ---------
 -- Axioms
@@ -141,7 +132,7 @@ modLT n d x with (mod n d)
   _ | _ = strictLT x (Left $ mkLT unsafeRefl, mkLT unsafeRefl)
 
 export
-0 modNegEQ : (n,d : Integer) -> d < 0 -> mod n d === mod n (neg d)
+0 modNegEQ : (n,d : Integer) -> d < 0 -> mod n d === mod n (negate d)
 modNegEQ n d x = strictLT x unsafeRefl
 
 export
@@ -185,4 +176,3 @@ accessLT m = Access $ \n,lt => accessLT (assert_smaller m n)
 export
 accessGT : (m : Integer) -> Accessible (BoundedGT ub) m
 accessGT m = Access $ \n,gt => accessGT (assert_smaller m n)
-
