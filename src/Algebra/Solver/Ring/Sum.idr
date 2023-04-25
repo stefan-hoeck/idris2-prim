@@ -107,6 +107,7 @@ normalize e = normSum (norm e)
 --------------------------------------------------------------------------------
 
 -- Adding two sums via `add` preserves the evaluation result.
+-- Note: `assert_total` in here is a temporary fix for idris issue #2954
 0 padd :  SolvableRing a
        => (x,y : Sum a as)
        -> esum x + esum y === esum (add x y)
@@ -125,7 +126,7 @@ padd (T m x :: xs) (T n y :: ys) with (compProd x y) proof eq
     ~~ n * eprod y + ((m * eprod x + esum xs) + esum ys)
        ..< p213
     ~~ n * eprod y + esum (add (T m x :: xs) ys)
-       ... cong (n * eprod y +) (padd (T m x :: xs) ys)
+       ... cong (n * eprod y +) (assert_total $ padd (T m x :: xs) ys)
 
   _ | EQ = case pcompProd x y eq of
         Refl => Calc $
