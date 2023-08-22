@@ -34,10 +34,11 @@ pone (x :: xs) = Calc $
 
 ||| Proof that `fromVar x` evaluates to `x`.
 export
-0 pvar :  Semiring a
-       => (as : List a)
-       -> (e  : Elem x as)
-       -> eprod (fromVar {as} e) === x
+0 pvar :
+     {auto _ : Semiring a}
+  -> (as : List a)
+  -> (e  : Elem x as)
+  -> eprod (fromVar {as} e) === x
 pvar (x :: vs) Here      = Calc $
   |~ (x * 1) * eprod (one {as = vs})
   ~~ (x * 1) * 1                     ... cong ((x*1) *) (pone vs)
@@ -56,9 +57,10 @@ pvar [] (There y) impossible
 ||| is the same as multiplying the results of evaluating each
 ||| of them.
 export
-0 pmult :  Semiring a
-        => (p,q : Prod a as)
-        -> eprod (mult p q) === eprod p * eprod q
+0 pmult :
+     {auto _ : Semiring a}
+  -> (p,q : Prod a as)
+  -> eprod (mult p q) === eprod p * eprod q
 pmult []        []        = sym multOneLeftNeutral
 pmult {as = h :: t} (x :: xs) (y :: ys) = Calc $
   |~ pow h (x + y) * eprod (mult xs ys)
@@ -68,4 +70,3 @@ pmult {as = h :: t} (x :: xs) (y :: ys) = Calc $
      ... cong ((pow h x * pow h y) *) (pmult xs ys)
   ~~ (pow h x * eprod xs) * (pow h y * eprod ys)
      ... Util.m1324
-

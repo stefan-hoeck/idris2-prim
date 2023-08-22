@@ -84,10 +84,11 @@ multZeroRightAbsorbs =
 
 ||| Zero is an absorbing element of multiplication.
 export
-multZeroAbsorbs :  Semiring a
-                => (m,n : a)
-                -> Either (m === 0) (n === 0)
-                -> m * n === 0
+multZeroAbsorbs :
+     {auto _ : Semiring a}
+  -> (m,n : a)
+  -> Either (m === 0) (n === 0)
+  -> m * n === 0
 multZeroAbsorbs m n (Left rfl) =
   Calc $
     |~ m * n
@@ -102,9 +103,10 @@ multZeroAbsorbs m n (Right rfl) =
 
 ||| Multiplication is distributive with respect to addition.
 export
-0 rightDistributive :  Semiring a
-                  => {k,m,n : a}
-                  -> (m + n) * k === m * k + n * k
+0 rightDistributive :
+     {auto _ : Semiring a}
+  -> {k,m,n : a}
+  -> (m + n) * k === m * k + n * k
 rightDistributive =
   Calc $
     |~ (m + n) * k

@@ -15,6 +15,7 @@ prop_comp = property $ do
 
 export
 props : Group
-props = MkGroup "Int16" $
-  [ ("prop_comp",   prop_comp)
-  ] ++ ringProps allInteger
+props =
+  MkGroup "Integer" $
+    [ ("prop_comp",   prop_comp)
+    ] ++ ringProps allInteger

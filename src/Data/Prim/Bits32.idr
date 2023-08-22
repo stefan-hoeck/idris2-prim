@@ -123,8 +123,9 @@ export
 LTE_MaxBits32 m = case comp m MaxBits32 of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Bits32 greater than \{show MaxBits32}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Bits32 greater than \{show MaxBits32}"
 
 ||| Not value of type `Bits32` is greater than `MaxBits32`.
 export
@@ -175,10 +176,11 @@ sdiv n d = n `div` d
 ||| of `0 /= n`, because in my experience, the former
 ||| is much more useful.
 export %inline
-rdiv :  (n,d : Bits32)
-     -> (0 dgt1 : 1 < d)
-     => (0 ngt0 : 0 < n)
-     => Subset Bits32 (< n)
+rdiv :
+     (n,d : Bits32)
+  -> {auto 0 dgt1 : 1 < d}
+  -> {auto 0 ngt0 : 0 < n}
+  -> Subset Bits32 (< n)
 rdiv n d = Element (n `div` d) (LT unsafeRefl)
 
 ||| Safe modulo.

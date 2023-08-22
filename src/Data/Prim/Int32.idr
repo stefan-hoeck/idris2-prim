@@ -110,8 +110,9 @@ export
 GTE_MinInt32 m = case comp MinInt32 m of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Int32 smaller than \{show MinInt32}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Int32 smaller than \{show MinInt32}"
 
 ||| Not value of type `Int32` is less than zero.
 export
@@ -124,8 +125,9 @@ export
 LTE_MaxInt32 m = case comp m MaxInt32 of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Int32 greater than \{show MaxInt32}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Int32 greater than \{show MaxInt32}"
 
 ||| Not value of type `Int32` is greater than `MaxInt32`.
 export

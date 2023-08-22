@@ -42,19 +42,21 @@ normalize (Append x y) = normalize x ++ normalize y
 --          Proofs
 --------------------------------------------------------------------------------
 
-0 psum' :  LSemigroup a
-        => (x,y   : a)
-        -> (xs,ys : List a)
-        -> esum' x (xs ++ (y :: ys)) === esum' x xs <+> esum' y ys
+0 psum' :
+     {auto _ : LSemigroup a}
+  -> (x,y   : a)
+  -> (xs,ys : List a)
+  -> esum' x (xs ++ (y :: ys)) === esum' x xs <+> esum' y ys
 psum' x y []        ys = Refl
 psum' x y (v :: vs) ys = Calc $
   |~ x <+> esum' v (vs ++ (y :: ys))
   ~~ x <+> (esum' v vs <+> esum' y ys) ... cong (x <+>) (psum' v y vs ys)
   ~~ (x <+> esum' v vs) <+> esum' y ys ... appendAssociative
 
-0 psum :  LSemigroup a
-       => (xs,ys : List1 a)
-       -> esum (xs ++ ys) === esum xs <+> esum ys
+0 psum :
+     {auto _ : LSemigroup a}
+  -> (xs,ys : List1 a)
+  -> esum (xs ++ ys) === esum xs <+> esum ys
 psum (x ::: xs) (y ::: ys) = psum' x y xs ys
 
 0 pnorm : LSemigroup a => (e : Expr a) -> eval e === esum (normalize e)
@@ -73,10 +75,11 @@ pnorm (Append x y) = Calc $
 --------------------------------------------------------------------------------
 
 export
-0 solve :  LSemigroup a
-        => (e1,e2 : Expr a)
-        -> (prf : normalize e1 === normalize e2)
-        => eval e1 === eval e2
+0 solve :
+     {auto _ : LSemigroup a}
+  -> (e1,e2 : Expr a)
+  -> {auto prf : normalize e1 === normalize e2}
+  -> eval e1 === eval e2
 solve e1 e2 = Calc $
   |~ eval e1
   ~~ esum (normalize e1) ... pnorm e1

@@ -76,9 +76,10 @@ to manually define values of type `(<)`, is annotated with
 a `%hint` pragma.
 
 ```idris
-fromInteger :  (n : Integer)
-            -> (0 prf : cast n > the Bits64 0)
-            => Positive
+fromInteger :
+     (n : Integer)
+  -> {auto 0 prf : cast n > the Bits64 0}
+  -> Positive
 fromInteger n = Element (cast n) prf
 
 twelve : Positive
@@ -120,10 +121,11 @@ record Base where
 
 namespace Base
   public export
-  fromInteger :  (n : Integer)
-              -> (0 gt1   : cast n > the Bits64 1)
-              => (0 lte16 : cast n <= the Bits64 16)
-              => Base
+  fromInteger :
+       (n : Integer)
+    -> {auto 0 gt1   : cast n > the Bits64 1}
+    -> {auto 0 lte16 : cast n <= the Bits64 16}
+    -> Base
   fromInteger n = MkBase (cast n) gt1 lte16
 ```
 
@@ -150,14 +152,16 @@ is quite verbose.
 lit : Bits64 -> Base -> String
 lit 0 _ = "0"
 lit x (MkBase b gt1 lte16) = go [] x
-  where go : List Char -> Bits64 -> String
-        go cs 0 = pack cs
-        go cs v =
-          let 0 gt0         = the (0 < b) $ trans %search gt1
-              Element d ltb = rmod v b
-              v2            = sdiv v b
-              c             = hexChar d {prf = trans_LT_LTE ltb lte16}
-           in go (c :: cs) (assert_smaller v v2)
+
+  where
+    go : List Char -> Bits64 -> String
+    go cs 0 = pack cs
+    go cs v =
+      let 0 gt0         := the (0 < b) $ trans %search gt1
+          Element d ltb := rmod v b
+          v2            := sdiv v b
+          c             := hexChar d {prf = trans_LT_LTE ltb lte16}
+       in go (c :: cs) (assert_smaller v v2)
 ```
 
 Functions `rmod` and `sdiv` each require a proof that `b` is larger than zero.
@@ -209,11 +213,13 @@ lt16 = trans_LT_LTE
 lit2 : Bits64 -> Base -> String
 lit2 0 _ = "0"
 lit2 x (MkBase b geq2 lte16) = go [] x
-  where go : List Char -> Bits64 -> String
-        go cs 0 = pack cs
-        go cs v =
-          let Element d ltb = rmod v b
-           in go (hexChar d :: cs) (assert_smaller v $ sdiv v b)
+
+  where
+    go : List Char -> Bits64 -> String
+    go cs 0 = pack cs
+    go cs v =
+      let Element d ltb := rmod v b
+       in go (hexChar d :: cs) (assert_smaller v $ sdiv v b)
 ```
 
 That looks pretty nice. The only ugly (and unsafe!) piece is the
@@ -257,14 +263,16 @@ Here is how to do this for `Bits64` and `(<)`:
 lit3 : Bits64 -> Base -> String
 lit3 0 _ = "0"
 lit3 x (MkBase b _ _) = go [] x (accessLT x)
-  where go : List Char -> (n : Bits64) -> (0 _ : Accessible (<) n) -> String
-        go cs n (Access rec) = case comp 0 n of
-          LT ngt0 _ _ =>
-            let Element d  _   = n `rmod` b
-                Element n2 ltn = n `rdiv` b
-             in go (hexChar d :: cs) n2 (rec n2 ltn)
-          EQ _    _ _   => pack cs
-          GT _    _ lt0 => void (Not_LT_MinBits64 lt0)
+
+  where
+    go : List Char -> (n : Bits64) -> (0 _ : Accessible (<) n) -> String
+    go cs n (Access rec) = case comp 0 n of
+      LT ngt0 _ _ =>
+        let Element d  _   := n `rmod` b
+            Element n2 ltn := n `rdiv` b
+         in go (hexChar d :: cs) n2 (rec n2 ltn)
+      EQ _    _ _   => pack cs
+      GT _    _ lt0 => void (Not_LT_MinBits64 lt0)
 ```
 
 Note, how we used `comp` to compare the current value against the
@@ -342,5 +350,5 @@ and with different designs to get the best compromise in terms of
 code reuse, type inference, and expressiveness.
 Therefore, this library is still bound to change in breaking ways.
 
-<!-- vi: filetype=idris2
+<!-- vi: filetype=idris2:syntax=markdown
 -->

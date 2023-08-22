@@ -123,8 +123,9 @@ export
 LTE_MaxBits64 m = case comp m MaxBits64 of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Bits64 greater than \{show MaxBits64}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Bits64 greater than \{show MaxBits64}"
 
 ||| Not value of type `Bits64` is greater than `MaxBits64`.
 export
@@ -175,10 +176,11 @@ sdiv n d = n `div` d
 ||| of `0 /= n`, because in my experience, the former
 ||| is much more useful.
 export %inline
-rdiv :  (n,d : Bits64)
-     -> (0 dgt1 : 1 < d)
-     => (0 ngt0 : 0 < n)
-     => Subset Bits64 (< n)
+rdiv :
+     (n,d : Bits64)
+  -> {auto 0 dgt1 : 1 < d}
+  -> {auto 0 ngt0 : 0 < n}
+  -> Subset Bits64 (< n)
 rdiv n d = Element (n `div` d) (LT unsafeRefl)
 
 ||| Safe modulo.

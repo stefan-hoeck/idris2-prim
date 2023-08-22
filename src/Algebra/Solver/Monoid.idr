@@ -44,9 +44,10 @@ normalize (Append x y) = normalize x ++ normalize y
 --          Proofs
 --------------------------------------------------------------------------------
 
-0 psum :  LMonoid a
-       => (xs,ys : List a)
-       -> esum (xs ++ ys) === esum xs <+> esum ys
+0 psum :
+     {auto _ : LMonoid a}
+  -> (xs,ys : List a)
+  -> esum (xs ++ ys) === esum xs <+> esum ys
 psum []        ys = sym appendLeftNeutral
 psum (x :: xs) ys = Calc $
   |~ x <+> esum (xs ++ ys)
@@ -71,10 +72,11 @@ pnorm (Append x y) = Calc $
 --------------------------------------------------------------------------------
 
 export
-0 solve :  LMonoid a
-        => (e1,e2 : Expr a)
-        -> (prf : normalize e1 === normalize e2)
-        => eval e1 === eval e2
+0 solve :
+     {auto _ : LMonoid a}
+  -> (e1,e2 : Expr a)
+  -> {auto prf : normalize e1 === normalize e2}
+  -> eval e1 === eval e2
 solve e1 e2 = Calc $
   |~ eval e1
   ~~ esum (normalize e1) ... pnorm e1
@@ -88,5 +90,6 @@ solve e1 e2 = Calc $
 0 solverExample : {x,y,z : String}
                 -> x ++ ((y ++ "") ++ z) === ("" ++ x) ++ (y ++ z)
 solverExample =
-  solve (Var x <+> ((Var y <+> Neutral) <+> Var z))
-        ((Neutral <+> Var x) <+> (Var y <+> Var z))
+  solve
+    (Var x <+> ((Var y <+> Neutral) <+> Var z))
+    ((Neutral <+> Var x) <+> (Var y <+> Var z))

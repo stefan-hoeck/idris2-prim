@@ -25,8 +25,9 @@ prop_comp = property $ do
 
 export
 props : Group
-props = MkGroup "Int8" $
-  [ ("prop_ltMax",  prop_ltMax)
-  , ("prop_ltMin",  prop_ltMin)
-  , ("prop_comp",   prop_comp)
-  ] ++ ringProps allInt8
+props =
+  MkGroup "Int8" $
+    [ ("prop_ltMax",  prop_ltMax)
+    , ("prop_ltMin",  prop_ltMin)
+    , ("prop_comp",   prop_comp)
+    ] ++ ringProps allInt8

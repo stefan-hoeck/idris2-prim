@@ -94,9 +94,10 @@ normalize e = normSum (norm e)
 
 -- Adding two sums via `add` preserves the evaluation result.
 -- Note: `assert_total` in here is a temporary fix for idris issue #2954
-0 padd :  SolvableSemiring a
-       => (x,y : Sum a as)
-       -> esum x + esum y === esum (add x y)
+0 padd :
+     {auto _ : SolvableSemiring a}
+  -> (x,y : Sum a as)
+  -> esum x + esum y === esum (add x y)
 padd []            xs = plusZeroLeftNeutral
 padd (x :: xs)     [] = plusZeroRightNeutral
 padd (T m x :: xs) (T n y :: ys) with (compProd x y) proof eq
@@ -125,10 +126,11 @@ padd (T m x :: xs) (T n y :: ys) with (compProd x y) proof eq
              ... cong ((m + n) * eprod x +) (padd xs ys)
 
 -- Small utility lemma
-0 psum0 :  SolvableSemiring a
-        => {x,y,z : a}
-        -> x === y
-        -> x === 0 * z + y
+0 psum0 :
+     {auto _ : SolvableSemiring a}
+  -> {x,y,z : a}
+  -> x === y
+  -> x === 0 * z + y
 psum0 prf = Calc $
   |~ x
   ~~ y          ... prf
@@ -136,11 +138,12 @@ psum0 prf = Calc $
   ~~ 0 * z + y  ..< cong (+ y) multZeroLeftAbsorbs
 
 -- Multiplying a sum with a term preserves the evaluation result.
-0 pmult1 :  SolvableSemiring a
-         => (m : a)
-         -> (p : Prod a as)
-         -> (s : Sum a as)
-         -> esum (mult1 (T m p) s) === (m * eprod p) * esum s
+0 pmult1 :
+     {auto _ : SolvableSemiring a}
+  -> (m : a)
+  -> (p : Prod a as)
+  -> (s : Sum a as)
+  -> esum (mult1 (T m p) s) === (m * eprod p) * esum s
 pmult1 m p []            = sym multZeroRightAbsorbs
 pmult1 m p (T n q :: xs) = Calc $
   |~ (m * n) * (eprod (mult p q)) + esum (mult1 (T m p) xs)
@@ -154,9 +157,10 @@ pmult1 m p (T n q :: xs) = Calc $
      ..< leftDistributive
 
 -- Multiplying two sums of terms preserves the evaluation result.
-0 pmult :  SolvableSemiring a
-        => (x,y : Sum a as)
-        -> esum x * esum y === esum (mult x y)
+0 pmult :
+     {auto _ : SolvableSemiring a}
+  -> (x,y : Sum a as)
+  -> esum x * esum y === esum (mult x y)
 pmult []            y = multZeroLeftAbsorbs
 pmult (T n x :: xs) y = Calc $
   |~ (n * eprod x + esum xs) * esum y
@@ -171,9 +175,10 @@ pmult (T n x :: xs) y = Calc $
 
 -- Removing zero values from a sum of terms does not
 -- affect the evaluation result.
-0 pnormSum :  SolvableSemiring a
-           => (s : Sum a as)
-           -> esum (normSum s) === esum s
+0 pnormSum :
+     {auto _ : SolvableSemiring a}
+  -> (s : Sum a as)
+  -> esum (normSum s) === esum s
 pnormSum []           = Refl
 pnormSum (T f p :: y) with (isZero f)
   _ | Nothing   = Calc $
@@ -189,9 +194,10 @@ pnormSum (T f p :: y) with (isZero f)
 
 -- Evaluating an expression gives the same result as
 -- evaluating its normalized form.
-0 pnorm :  SolvableSemiring a
-        => (e : Expr a as)
-        -> eval e === esum (norm e)
+0 pnorm :
+     {auto _ : SolvableSemiring a}
+  -> (e : Expr a as)
+  -> eval e === esum (norm e)
 pnorm (Lit n)    = Calc $
   |~ n
   ~~ n * 1                    ..< multOneRightNeutral
@@ -224,9 +230,10 @@ pnorm (Mult x y) = Calc $
 
 -- Evaluating an expression gives the same result as
 -- evaluating its normalized form.
-0 pnormalize :  SolvableSemiring a
-             => (e : Expr a as)
-             -> eval e === esum (normalize e)
+0 pnormalize :
+     {auto _ : SolvableSemiring a}
+  -> (e : Expr a as)
+  -> eval e === esum (normalize e)
 pnormalize e = Calc $
   |~ eval e
   ~~ esum (norm e)           ... pnorm e
@@ -253,11 +260,12 @@ pnormalize e = Calc $
 |||                (x .*. x + 2 *. x *. y + y .*. y)
 ||| ```
 export
-0 solve :  SolvableSemiring a
-        => (as : List a)
-        -> (e1,e2 : Expr a as)
-        -> (prf : normalize e1 === normalize e2)
-        => eval e1 === eval e2
+0 solve :
+     {auto _ : SolvableSemiring a}
+  -> (as : List a)
+  -> (e1,e2 : Expr a as)
+  -> {auto prf : normalize e1 === normalize e2}
+  -> eval e1 === eval e2
 solve _ e1 e2 = Calc $
   |~ eval e1
   ~~ esum (normalize e1) ...(pnormalize e1)

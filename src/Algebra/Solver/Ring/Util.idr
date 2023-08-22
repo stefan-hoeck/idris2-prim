@@ -14,9 +14,10 @@ p213 = Calc $
   ~~ m + (k + n)   ..< plusAssociative
 
 export
-0 p1324 :  Ring a
-        => {k,l,m,n : a}
-        -> (k + l) + (m + n) === (k + m) + (l + n)
+0 p1324 :
+     {auto _ : Ring a}
+  -> {k,l,m,n : a}
+  -> (k + l) + (m + n) === (k + m) + (l + n)
 p1324 = Calc $
   |~ (k + l) + (m + n)
   ~~ ((k + l) + m) + n ... plusAssociative
@@ -26,9 +27,10 @@ p1324 = Calc $
   ~~ (k + m) + (l + n) ..< plusAssociative
 
 export
-0 m1324 :  Ring a
-        => {k,l,m,n : a}
-        -> (k * l) * (m * n) === (k * m) * (l * n)
+0 m1324 :
+     {auto _ : Ring a}
+  -> {k,l,m,n : a}
+  -> (k * l) * (m * n) === (k * m) * (l * n)
 m1324 = Calc $
   |~ (k * l) * (m * n)
   ~~ ((k * l) * m) * n ... multAssociative

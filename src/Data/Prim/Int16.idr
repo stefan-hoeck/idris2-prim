@@ -110,8 +110,9 @@ export
 GTE_MinInt16 m = case comp MinInt16 m of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Int16 smaller than \{show MinInt16}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Int16 smaller than \{show MinInt16}"
 
 ||| Not value of type `Int16` is less than zero.
 export
@@ -124,8 +125,9 @@ export
 LTE_MaxInt16 m = case comp m MaxInt16 of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Int16 greater than \{show MaxInt16}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Int16 greater than \{show MaxInt16}"
 
 ||| Not value of type `Int16` is greater than `MaxInt16`.
 export

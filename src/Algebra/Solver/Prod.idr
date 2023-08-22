@@ -67,9 +67,10 @@ pcompNat 0 (S k) Refl impossible
 pcompNat (S k) 0 Refl impossible
 
 export
-0 pcompProd :  (x,y : Prod a as)
-            -> (compProd x y === EQ)
-            -> x === y
+0 pcompProd :
+     (x,y : Prod a as)
+  -> (compProd x y === EQ)
+  -> x === y
 pcompProd []        []        prf = Refl
 pcompProd (x :: xs) (y :: ys) prf with (compare x y) proof eq
   _ | EQ = cong2 (::) (pcompNat x y eq) (pcompProd xs ys prf)
