@@ -19,7 +19,9 @@ prop_comp = property $ do
 
 export
 props : Group
-props = MkGroup "Char"
-  [ ("prop_ltMin",  prop_ltMin)
-  , ("prop_comp",   prop_comp)
-  ]
+props =
+  MkGroup
+    "Char"
+    [ ("prop_ltMin",  prop_ltMin)
+    , ("prop_comp",   prop_comp)
+    ]

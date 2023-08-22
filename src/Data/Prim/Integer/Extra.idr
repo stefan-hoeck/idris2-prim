@@ -38,9 +38,11 @@ pairMultCommutative = (multCommutative, multCommutative)
 ||| a syntax that is similar to the one used for preorder
 ||| reasoning.
 public export
-data Rel :  (rel : Integer -> Integer -> Type)
-         -> (x,y : Integer)
-         -> Type where
+data Rel :
+     (rel : Integer -> Integer -> Type)
+  -> (x,y : Integer)
+  -> Type where
+
   (<)   : (x,y : Integer) -> Rel (<)   x y
   (<=)  : (x,y : Integer) -> Rel (<=)  x y
   (===) : (x,y : Integer) -> Rel (===) x y
@@ -118,10 +120,11 @@ export
 ||| <> z + x < z + y ... plusLeft
 ||| ```
 export
-0 plusLeft :  {x,y,z : Integer}
-           -> Rel r (z + x) (z + y)
-           -> r x y
-           -> r (z + x) (z + y)
+0 plusLeft :
+     {x,y,z : Integer}
+  -> Rel r (z + x) (z + y)
+  -> r x y
+  -> r (z + x) (z + y)
 plusLeft (_ < _)   v         = plusGT x y z v
 plusLeft (_ <= _)  (Left v)  = Left $ plusGT x y z v
 plusLeft (_ <= _)  (Right v) = Right $ cong (z +) v
@@ -137,10 +140,11 @@ plusLeft (_ > _)   v         = plusGT y x z v
 ||| <> x + z < y + z ... plusRight
 ||| ```
 export
-0 plusRight :  {x,y,z : Integer}
-            -> Rel r (x + z) (y + z)
-            -> r x y
-            -> r (x + z) (y + z)
+0 plusRight :
+     {x,y,z : Integer}
+  -> Rel r (x + z) (y + z)
+  -> r x y
+  -> r (x + z) (y + z)
 plusRight w =
   |> rel w x y
   <> rel w (z + x) (z + y) ... plusLeft
@@ -221,10 +225,11 @@ plusNonPosLeft (Right eq) =
 ||| <> x - z < y - z ... minus
 ||| ```
 export
-0 minus :  {x,y,z : Integer}
-        -> Rel r (x - z) (y - z)
-        -> r x y
-        -> r (x - z) (y - z)
+0 minus :
+     {x,y,z : Integer}
+  -> Rel r (x - z) (y - z)
+  -> r x y
+  -> r (x - z) (y - z)
 minus r =
   |> rel r x y
   <> rel r (x + neg z) (y + neg z) ... plusRight
@@ -276,10 +281,11 @@ minusGTE (Right eq) = Right $ Calc $
 ||| <> x     < y     ... solvePlusRight
 ||| ```
 export
-0 solvePlusRight :  {x,y,z : Integer}
-                 -> Rel r x y
-                 -> r (x + z) (y + z)
-                 -> r x y
+0 solvePlusRight :
+     {x,y,z : Integer}
+  -> Rel r x y
+  -> r (x + z) (y + z)
+  -> r x y
 solvePlusRight r =
   |> rel r (x + z) (y + z)
   <> rel r ((x + z) - z) ((y + z - z)) ... minus
@@ -296,10 +302,11 @@ solvePlusRight r =
 ||| <> x     < y     ... solvePlusLeft
 ||| ```
 export
-0 solvePlusLeft :  {x,y,z : Integer}
-                -> Rel r x y
-                -> r (z + x) (z + y)
-                -> r x y
+0 solvePlusLeft :
+     {x,y,z : Integer}
+  -> Rel r x y
+  -> r (z + x) (z + y)
+  -> r x y
 solvePlusLeft r =
   |> rel r (z + x) (z + y)
   <> rel r (x + z) (y + z) =.= pairPlusCommutative
@@ -313,10 +320,11 @@ solvePlusLeft r =
 ||| <> x     < y     ... solveMinus
 ||| ```
 export
-0 solveMinus :  {x,y,z : Integer}
-             -> Rel r x y
-             -> r (x - z) (y - z)
-             -> r x y
+0 solveMinus :
+     {x,y,z : Integer}
+  -> Rel r x y
+  -> r (x - z) (y - z)
+  -> r x y
 solveMinus r =
   |> rel r (x - z) (y - z)
   <> rel r ((x - z) + z) ((y - z) + z) ... plusRight
@@ -333,10 +341,11 @@ solveMinus r =
 ||| <> neg y < x     ... solvePlusRightZero
 ||| ```
 export
-0 solvePlusRightZero :  {x,y : Integer}
-                     -> Rel r (neg y) x
-                     -> r 0 (x + y)
-                     -> r (neg y) x
+0 solvePlusRightZero :
+     {x,y : Integer}
+  -> Rel r (neg y) x
+  -> r 0 (x + y)
+  -> r (neg y) x
 solvePlusRightZero r =
   |> rel r 0 (x + y)
   <> rel r (0 - y) ((x + y) - y) ... minus
@@ -353,10 +362,11 @@ solvePlusRightZero r =
 ||| <> 0  < x     ... solvePlusRightSelf
 ||| ```
 export
-0 solvePlusRightSelf :  {x,y : Integer}
-                     -> Rel r 0 x
-                     -> r y (x + y)
-                     -> r 0 x
+0 solvePlusRightSelf :
+     {x,y : Integer}
+  -> Rel r 0 x
+  -> r y (x + y)
+  -> r 0 x
 solvePlusRightSelf r =
   |> rel r y (x + y)
   <> rel r (0 + y) (x + y) ~.. plusZeroLeftNeutral
@@ -370,10 +380,11 @@ solvePlusRightSelf r =
 ||| <> neg x < y     ... solvePlusLeftZero
 ||| ```
 export
-0 solvePlusLeftZero :  {x,y : Integer}
-                     -> Rel r (neg x) y
-                     -> r 0 (x + y)
-                     -> r (neg x) y
+0 solvePlusLeftZero :
+     {x,y : Integer}
+  -> Rel r (neg x) y
+  -> r 0 (x + y)
+  -> r (neg x) y
 solvePlusLeftZero r =
   |> rel r 0 (x + y)
   <> rel r 0 (y + x)  ..= plusCommutative
@@ -387,10 +398,11 @@ solvePlusLeftZero r =
 ||| <> 0  < y     ... solvePlusLeftSelf
 ||| ```
 export
-0 solvePlusLeftSelf :  {x,y : Integer}
-                    -> Rel r 0 y
-                    -> r x (x + y)
-                    -> r 0 y
+0 solvePlusLeftSelf :
+     {x,y : Integer}
+  -> Rel r 0 y
+  -> r x (x + y)
+  -> r 0 y
 solvePlusLeftSelf r =
   |> rel r x (x + y)
   <> rel r (x + 0) (x + y) ~.. plusZeroRightNeutral
@@ -431,10 +443,11 @@ plusOneLTE lt = App (oneAfterZero (y - x) (minusLT lt)) $
 ||| <> neg y <= neg x ... negate
 ||| ```
 export
-0 negate :  {x,y : Integer}
-         -> Rel r (neg y) (neg x)
-         -> r x y
-         -> r (neg y) (neg x)
+0 negate :
+     {x,y : Integer}
+  -> Rel r (neg y) (neg x)
+  -> r x y
+  -> r (neg y) (neg x)
 negate r =
   |> rel r x y
   <> rel r (x - (x + y)) (y - (x + y)) ... minus
@@ -497,10 +510,11 @@ negateNegZero r =
 --          Multiplication in Inequalities
 --------------------------------------------------------------------------------
 
-0 mplLemma :  {x,y,z : Integer}
-           -> 0 < z
-           -> x < y
-           -> z * x < z * y
+0 mplLemma :
+     {x,y,z : Integer}
+  -> 0 < z
+  -> x < y
+  -> z * x < z * y
 mplLemma p =
   |> x         < y
   <> x - x     < y - x               ... minus
@@ -524,11 +538,12 @@ mplLemma p =
 ||| <> z * x <= z * y ... multPosLeft zgt0
 ||| ```
 export
-0 multPosLeft :  {x,y,z : Integer}
-              -> 0 < z
-              -> Rel r (z * x) (z * y)
-              -> r x y
-              -> r (z * x) (z * y)
+0 multPosLeft :
+     {x,y,z : Integer}
+  -> 0 < z
+  -> Rel r (z * x) (z * y)
+  -> r x y
+  -> r (z * x) (z * y)
 multPosLeft p (_ < _)   rxy       = mplLemma p rxy
 multPosLeft p (_ <= _)  (Left w)  = Left $ mplLemma p w
 multPosLeft p (_ <= _)  (Right w) = Right $ cong (z *) w
@@ -549,11 +564,12 @@ multPosLeft p (_ > _)   rxy       = mplLemma p rxy
 ||| <> x * z <= y * z ... multPosRight zgt0
 ||| ```
 export
-0 multPosRight :  {x,y,z : Integer}
-               -> 0 < z
-               -> Rel r (x * z) (y * z)
-               -> r x y
-               -> r (x * z) (y * z)
+0 multPosRight :
+     {x,y,z : Integer}
+  -> 0 < z
+  -> Rel r (x * z) (y * z)
+  -> r x y
+  -> r (x * z) (y * z)
 multPosRight p r =
   |> rel r x y
   <> rel r (z * x) (z * y) ... multPosLeft p
@@ -571,11 +587,12 @@ multPosRight p r =
 ||| <> z * y <= z * x ... multNegLeft zgt0
 ||| ```
 export
-0 multNegLeft :  {x,y,z : Integer}
-              -> z < 0
-              -> Rel r (z * y) (z * x)
-              -> r x y
-              -> r (z * y) (z * x)
+0 multNegLeft :
+     {x,y,z : Integer}
+  -> z < 0
+  -> Rel r (z * y) (z * x)
+  -> r x y
+  -> r (z * y) (z * x)
 multNegLeft p r =
   let negp = negateZero (neg z > 0) p
    in |> rel r x y
@@ -598,11 +615,12 @@ multNegLeft p r =
 ||| <> y * z <= x * z ... multNegRight zgt0
 ||| ```
 export
-0 multNegRight :  {x,y,z : Integer}
-               -> z < 0
-               -> Rel r (y * z) (x * z)
-               -> r x y
-               -> r (y * z) (x * z)
+0 multNegRight :
+     {x,y,z : Integer}
+  -> z < 0
+  -> Rel r (y * z) (x * z)
+  -> r x y
+  -> r (y * z) (x * z)
 multNegRight p r =
   |> rel r x y
   <> rel r (z * y) (z * x) ... multNegLeft p
@@ -623,11 +641,12 @@ lemmaMult0 prf = Calc $
 ||| <> x * z <= y * z ... multNonNegRight zgte0
 ||| ```
 export
-0 multNonNegRight :  {x,y,z : Integer}
-                  -> 0 <= z
-                  -> Rel (<=) (x * z) (y * z)
-                  -> x < y
-                  -> x * z <= y * z
+0 multNonNegRight :
+     {x,y,z : Integer}
+  -> 0 <= z
+  -> Rel (<=) (x * z) (y * z)
+  -> x < y
+  -> x * z <= y * z
 multNonNegRight (Left p) r xy = Left $ multPosRight p (x * z < y * z) xy
 multNonNegRight (Right p) r xy = Right $ lemmaMult0 p
 
@@ -638,11 +657,12 @@ multNonNegRight (Right p) r xy = Right $ lemmaMult0 p
 ||| <> z * x <= z * y ... multNonNegLeft zgte0
 ||| ```
 export
-0 multNonNegLeft :  {x,y,z : Integer}
-                 -> 0 <= z
-                 -> Rel (<=) (z * x) (z * y)
-                 -> x < y
-                 -> z * x <= z * y
+0 multNonNegLeft :
+     {x,y,z : Integer}
+  -> 0 <= z
+  -> Rel (<=) (z * x) (z * y)
+  -> x < y
+  -> z * x <= z * y
 multNonNegLeft p r =
   |> x < y
   <> x * z <= y * z ... multNonNegRight p
@@ -656,11 +676,12 @@ multNonNegLeft p r =
 ||| <> y * z <= x * z ... multNonPosRight zgte0
 ||| ```
 export
-0 multNonPosRight :  {x,y,z : Integer}
-                  -> z <= 0
-                  -> Rel (<=) (y * z) (x * z)
-                  -> x < y
-                  -> y * z <= x * z
+0 multNonPosRight :
+     {x,y,z : Integer}
+  -> z <= 0
+  -> Rel (<=) (y * z) (x * z)
+  -> x < y
+  -> y * z <= x * z
 multNonPosRight (Left p) r xy = Left $ multNegRight p (y * z < x * z) xy
 multNonPosRight (Right p) r xy = Right $ lemmaMult0 (sym p)
 
@@ -672,11 +693,12 @@ multNonPosRight (Right p) r xy = Right $ lemmaMult0 (sym p)
 ||| <> z * y <= z * x ... multNonPosLeft zlte0
 ||| ```
 export
-0 multNonPosLeft :  {x,y,z : Integer}
-                 -> z <= 0
-                 -> Rel (<=) (z * y) (z * x)
-                 -> x < y
-                 -> z * y <= z * x
+0 multNonPosLeft :
+     {x,y,z : Integer}
+  -> z <= 0
+  -> Rel (<=) (z * y) (z * x)
+  -> x < y
+  -> z * y <= z * x
 multNonPosLeft p r =
   |> x < y
   <> y * z <= x * z ... multNonPosRight p
@@ -702,11 +724,12 @@ smpLemma2 dpos lt = case comp x y of
 ||| <> x     < y     ... solveMultPosLeft zgt0
 ||| ```
 export
-0 solveMultPosLeft :  {d,x,y : Integer}
-                   -> 0 < d
-                   -> Rel r x y
-                   -> r (d * x) (d * y)
-                   -> r x y
+0 solveMultPosLeft :
+     {d,x,y : Integer}
+  -> 0 < d
+  -> Rel r x y
+  -> r (d * x) (d * y)
+  -> r x y
 solveMultPosLeft dpos (x < y)   lt         = smpLemma1 dpos lt
 solveMultPosLeft dpos (x <= y)  (Left lt)  = Left $ smpLemma1 dpos lt
 solveMultPosLeft dpos (x <= y)  (Right eq) = Right $ smpLemma2 dpos eq
@@ -723,11 +746,12 @@ solveMultPosLeft dpos (x > y)   lt         = smpLemma1 dpos lt
 ||| <> x     < y     ... solveMultPosRight zgt0
 ||| ```
 export
-0 solveMultPosRight :  {x,y,d : Integer}
-                    -> 0 < d
-                    -> Rel r x y
-                    -> r (x * d) (y * d)
-                    -> r x y
+0 solveMultPosRight :
+     {x,y,d : Integer}
+  -> 0 < d
+  -> Rel r x y
+  -> r (x * d) (y * d)
+  -> r x y
 solveMultPosRight dpos r =
   |> rel r (x * d) (y * d)
   <> rel r (d * x) (d * y) =.= pairMultCommutative
@@ -741,11 +765,12 @@ solveMultPosRight dpos r =
 ||| <> y     < x     ... solveMultNegLeft zlt0
 ||| ```
 export
-0 solveMultNegLeft :  {d,x,y : Integer}
-                   -> d < 0
-                   -> Rel r y x
-                   -> r (d * x) (d * y)
-                   -> r y x
+0 solveMultNegLeft :
+     {d,x,y : Integer}
+  -> d < 0
+  -> Rel r y x
+  -> r (d * x) (d * y)
+  -> r y x
 solveMultNegLeft dneg r =
   let negdPos = negateZero (neg d > 0) dneg
    in |> rel r (d * x) (d * y)
@@ -764,11 +789,12 @@ solveMultNegLeft dneg r =
 ||| <> y     < y     ... solveMultNegLeft zlt0
 ||| ```
 export
-0 solveMultNegRight :  {x,y,d : Integer}
-                    -> d < 0
-                    -> Rel r y x
-                    -> r (x * d) (y * d)
-                    -> r y x
+0 solveMultNegRight :
+     {x,y,d : Integer}
+  -> d < 0
+  -> Rel r y x
+  -> r (x * d) (y * d)
+  -> r y x
 solveMultNegRight dneg r =
   |> rel r (x * d) (y * d)
   <> rel r (d * x) (d * y) =.= pairMultCommutative
@@ -782,11 +808,12 @@ solveMultNegRight dneg r =
 ||| <> 0 < x     ... solveMultPosRightZero ygt0
 ||| ```
 export
-0 solveMultPosRightZero :  {x,y : Integer}
-                        -> 0 < y
-                        -> Rel r 0 x
-                        -> r 0 (x * y)
-                        -> r 0 x
+0 solveMultPosRightZero :
+     {x,y : Integer}
+  -> 0 < y
+  -> Rel r 0 x
+  -> r 0 (x * y)
+  -> r 0 x
 solveMultPosRightZero pos r =
   |> rel r 0 (x * y)
   <> rel r (0 * y) (x * y) ~.. multZeroLeftAbsorbs
@@ -800,11 +827,12 @@ solveMultPosRightZero pos r =
 ||| <> x < 0     ... solveMultNegRightZero ylt0
 ||| ```
 export
-0 solveMultNegRightZero :  {x,y : Integer}
-                        -> y < 0
-                        -> Rel r x 0
-                        -> r 0 (x * y)
-                        -> r x 0
+0 solveMultNegRightZero :
+     {x,y : Integer}
+  -> y < 0
+  -> Rel r x 0
+  -> r 0 (x * y)
+  -> r x 0
 solveMultNegRightZero neg r =
   |> rel r 0 (x * y)
   <> rel r (0 * y) (x * y) ~.. multZeroLeftAbsorbs
@@ -818,11 +846,12 @@ solveMultNegRightZero neg r =
 ||| <> 0 < y     ... solveMultPosLeftZero xgt0
 ||| ```
 export
-0 solveMultPosLeftZero :  {x,y : Integer}
-                        -> 0 < x
-                        -> Rel r 0 y
-                        -> r 0 (x * y)
-                        -> r 0 y
+0 solveMultPosLeftZero :
+     {x,y : Integer}
+  -> 0 < x
+  -> Rel r 0 y
+  -> r 0 (x * y)
+  -> r 0 y
 solveMultPosLeftZero pos r =
   |> rel r 0 (x * y)
   <> rel r (x * 0) (x * y) ~.. multZeroRightAbsorbs
@@ -836,11 +865,12 @@ solveMultPosLeftZero pos r =
 ||| <> y < 0     ... solveMultNegLeftZero xlt0
 ||| ```
 export
-0 solveMultNegLeftZero :  {x,y : Integer}
-                        -> x < 0
-                        -> Rel r y 0
-                        -> r 0 (x * y)
-                        -> r y 0
+0 solveMultNegLeftZero :
+     {x,y : Integer}
+  -> x < 0
+  -> Rel r y 0
+  -> r 0 (x * y)
+  -> r y 0
 solveMultNegLeftZero neg r =
   |> rel r 0 (x * y)
   <> rel r (x * 0) (x * y) ~.. multZeroRightAbsorbs
@@ -855,11 +885,12 @@ solveMultNegLeftZero neg r =
 ||| <> 1 < x     ... solveMultPosRightSelf ygt0
 ||| ```
 export
-0 solveMultPosRightSelf :  {x,y : Integer}
-                        -> 0 < y
-                        -> Rel r 1 x
-                        -> r y (x * y)
-                        -> r 1 x
+0 solveMultPosRightSelf :
+     {x,y : Integer}
+  -> 0 < y
+  -> Rel r 1 x
+  -> r y (x * y)
+  -> r 1 x
 solveMultPosRightSelf pos r =
   |> rel r y (x * y)
   <> rel r (1 * y) (x * y) ~.. multOneLeftNeutral
@@ -874,11 +905,12 @@ solveMultPosRightSelf pos r =
 ||| <> 1 < y     ... solveMultPosLeftSelf xgt0
 ||| ```
 export
-0 solveMultPosLeftSelf :  {x,y : Integer}
-                       -> 0 < x
-                       -> Rel r 1 y
-                       -> r x (x * y)
-                       -> r 1 y
+0 solveMultPosLeftSelf :
+     {x,y : Integer}
+  -> 0 < x
+  -> Rel r 1 y
+  -> r x (x * y)
+  -> r 1 y
 solveMultPosLeftSelf pos r =
   |> rel r x (x * y)
   <> rel r (x * 1) (x * y) ~.. multOneRightNeutral
@@ -893,11 +925,12 @@ solveMultPosLeftSelf pos r =
 ||| <> x < 1     ... solveMultNegRightSelf ylt0
 ||| ```
 export
-0 solveMultNegRightSelf :  {x,y : Integer}
-                        -> y < 0
-                        -> Rel r x 1
-                        -> r y (x * y)
-                        -> r x 1
+0 solveMultNegRightSelf :
+     {x,y : Integer}
+  -> y < 0
+  -> Rel r x 1
+  -> r y (x * y)
+  -> r x 1
 solveMultNegRightSelf neg r =
   |> rel r y (x * y)
   <> rel r (1 * y) (x * y) ~.. multOneLeftNeutral
@@ -912,11 +945,12 @@ solveMultNegRightSelf neg r =
 ||| <> y < 1     ... solveMultNegLeftSelf xlt0
 ||| ```
 export
-0 solveMultNegLeftSelf :  {x,y : Integer}
-                        -> x < 0
-                        -> Rel r y 1
-                        -> r x (x * y)
-                        -> r y 1
+0 solveMultNegLeftSelf :
+     {x,y : Integer}
+  -> x < 0
+  -> Rel r y 1
+  -> r x (x * y)
+  -> r y 1
 solveMultNegLeftSelf neg r =
   |> rel r x (x * y)
   <> rel r (x * 1) (x * y) ~.. multOneRightNeutral

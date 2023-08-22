@@ -19,8 +19,10 @@ prop_comp = property $ do
 
 export
 props : Group
-props = MkGroup "String"
-  [ ("prop_ltMin",  prop_ltMin)
-  , ("prop_comp",   prop_comp)
-  ]
+props =
+  MkGroup
+    "String"
+    [ ("prop_ltMin",  prop_ltMin)
+    , ("prop_comp",   prop_comp)
+    ]
 

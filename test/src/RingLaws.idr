@@ -50,11 +50,12 @@ prop_minusIsPlusNegate g = property $ do
   m - n === m + negate n
 
 export
-ringProps :  Show a
-          => Eq a
-          => Ring a
-          => Gen a
-          -> List (PropertyName,Property)
+ringProps :
+     {auto _ : Show a}
+  -> {auto _ : Eq a}
+  -> {auto _ : Ring a}
+  -> Gen a
+  -> List (PropertyName,Property)
 ringProps g =
   [ ("prop_plusCommutative",     prop_plusCommutative g)
   , ("prop_plusAssociative",     prop_plusAssociative g)

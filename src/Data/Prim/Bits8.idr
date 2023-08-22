@@ -123,8 +123,9 @@ export
 LTE_MaxBits8 m = case comp m MaxBits8 of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Bits8 greater than \{show MaxBits8}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Bits8 greater than \{show MaxBits8}"
 
 ||| Not value of type `Bits8` is greater than `MaxBits8`.
 export
@@ -175,10 +176,11 @@ sdiv n d = n `div` d
 ||| of `0 /= n`, because in my experience, the former
 ||| is much more useful.
 export %inline
-rdiv :  (n,d : Bits8)
-     -> (0 dgt1 : 1 < d)
-     => (0 ngt0 : 0 < n)
-     => Subset Bits8 (< n)
+rdiv :
+     (n,d : Bits8)
+  -> {auto 0 dgt1 : 1 < d}
+  -> {auto 0 ngt0 : 0 < n}
+  -> Subset Bits8 (< n)
 rdiv n d = Element (n `div` d) (LT unsafeRefl)
 
 ||| Safe modulo.

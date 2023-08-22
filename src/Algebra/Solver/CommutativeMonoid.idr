@@ -75,9 +75,10 @@ eterm (T f p) = f <+> eprod p
 --          Proofs
 --------------------------------------------------------------------------------
 
-0 p1324 :  CommutativeMonoid a
-        => {k,l,m,n : a}
-        -> (k <+> l) <+> (m <+> n) === (k <+> m) <+> (l <+> n)
+0 p1324 :
+     {auto _ : CommutativeMonoid a}
+  -> {k,l,m,n : a}
+  -> (k <+> l) <+> (m <+> n) === (k <+> m) <+> (l <+> n)
 p1324 = Calc $
   |~ (k <+> l) <+> (m <+> n)
   ~~ ((k <+> l) <+> m) <+> n ... appendAssociative
@@ -86,9 +87,10 @@ p1324 = Calc $
   ~~ ((k <+> m) <+> l) <+> n ... cong (<+>n) appendAssociative
   ~~ (k <+> m) <+> (l <+> n) ..< appendAssociative
 
-0 pone :  CommutativeMonoid a
-       => (as : List a)
-       -> eprod {as} Prod.one === Prelude.neutral
+0 pone :
+     {auto _ : CommutativeMonoid a}
+  -> (as : List a)
+  -> eprod {as} Prod.one === Prelude.neutral
 pone []        = Refl
 pone (v :: vs) = Calc $
   |~ neutral <+> eprod {as = vs} one
@@ -96,10 +98,11 @@ pone (v :: vs) = Calc $
   ~~ neutral                         ... appendLeftNeutral
 
 export
-0 pvar :  CommutativeMonoid a
-       => (as : List a)
-       -> (e  : Elem x as)
-       -> eprod (fromVar {as} e) === x
+0 pvar :
+     {auto _ : CommutativeMonoid a}
+  -> (as : List a)
+  -> (e  : Elem x as)
+  -> eprod (fromVar {as} e) === x
 pvar (x :: vs) Here      = Calc $
   |~ (x <+> neutral) <+> eprod {as = vs} one
   ~~ (x <+> neutral) <+> neutral ... cong ((x <+> neutral) <+>) (pone vs)
@@ -114,10 +117,11 @@ pvar (v :: vs) (There y) = Calc $
 pvar [] Here impossible
 pvar [] (There y) impossible
 
-0 ptimes :  CommutativeMonoid a
-         => (m,n : Nat)
-         -> (x : a)
-         -> times m x <+> times n x === times (m + n) x
+0 ptimes :
+     {auto _ : CommutativeMonoid a}
+  -> (m,n : Nat)
+  -> (x : a)
+  -> times m x <+> times n x === times (m + n) x
 ptimes 0     n x = appendLeftNeutral
 ptimes (S k) n x = Calc $
   |~ (x <+> times k x) <+> times n x
@@ -125,9 +129,10 @@ ptimes (S k) n x = Calc $
   ~~ x <+> times (k + n) x           ... cong (x <+>) (ptimes k n x)
 
 
-0 ppm :  CommutativeMonoid a
-      => (e1,e2 : Prod a as)
-      -> eprod e1 <+> eprod e2 === eprod (mult e1 e2)
+0 ppm :
+     {auto _ : CommutativeMonoid a}
+  -> (e1,e2 : Prod a as)
+  -> eprod e1 <+> eprod e2 === eprod (mult e1 e2)
 ppm []        []        = appendRightNeutral
 ppm {as = v :: vs} (m :: xs) (n :: ys) = Calc $
   |~ (times m v <+> eprod xs) <+> (times n v <+> eprod ys)
@@ -139,17 +144,19 @@ ppm {as = v :: vs} (m :: xs) (n :: ys) = Calc $
      ... cong (<+> eprod (mult xs ys)) (ptimes m n v)
 
 
-0 pappend :  CommutativeMonoid a
-          => (e1,e2 : Term a as)
-          -> eterm e1 <+> eterm e2 === eterm (append e1 e2)
+0 pappend :
+     {auto _ : CommutativeMonoid a}
+  -> (e1,e2 : Term a as)
+  -> eterm e1 <+> eterm e2 === eterm (append e1 e2)
 pappend (T f p) (T g q) = Calc $
   |~ (f <+> eprod p) <+> (g <+> eprod q)
   ~~ (f <+> g) <+> (eprod p <+> eprod q) ... p1324
   ~~ (f <+> g) <+> eprod (mult p q)      ... cong ((f <+> g) <+>) (ppm p q)
 
-0 pnorm :  CommutativeMonoid a
-        => (e : Expr a as)
-        -> eval e === eterm (normalize e)
+0 pnorm :
+     {auto _ : CommutativeMonoid a}
+  -> (e : Expr a as)
+  -> eval e === eterm (normalize e)
 pnorm (Lit x) = Calc $
   |~ x
   ~~ x <+> neutral        ..< appendRightNeutral
@@ -179,11 +186,12 @@ pnorm (Append x y) = Calc $
 --------------------------------------------------------------------------------
 
 export
-0 solve :  CommutativeMonoid a
-        => (as : List a)
-        -> (e1,e2 : Expr a as)
-        -> (prf : normalize e1 === normalize e2)
-        => eval e1 === eval e2
+0 solve :
+     {auto _ : CommutativeMonoid a}
+  -> (as : List a)
+  -> (e1,e2 : Expr a as)
+  -> {auto prf : normalize e1 === normalize e2}
+  -> eval e1 === eval e2
 solve _ e1 e2 = Calc $
   |~ eval e1
   ~~ eterm (normalize e1) ... pnorm e1

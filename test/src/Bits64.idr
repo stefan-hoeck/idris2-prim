@@ -48,11 +48,12 @@ prop_divMod = property $ do
 
 export
 props : Group
-props = MkGroup "Bits64" $
-  [ ("prop_ltMax",  prop_ltMax)
-  , ("prop_ltMin",  prop_ltMin)
-  , ("prop_comp",   prop_comp)
-  , ("prop_mod",    prop_mod)
-  , ("prop_div",    prop_div)
-  , ("prop_divMod", prop_divMod)
-  ] ++ ringProps allBits64
+props =
+  MkGroup "Bits64" $
+    [ ("prop_ltMax",  prop_ltMax)
+    , ("prop_ltMin",  prop_ltMin)
+    , ("prop_comp",   prop_comp)
+    , ("prop_mod",    prop_mod)
+    , ("prop_div",    prop_div)
+    , ("prop_divMod", prop_divMod)
+    ] ++ ringProps allBits64

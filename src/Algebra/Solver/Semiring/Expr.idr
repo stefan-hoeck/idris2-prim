@@ -102,61 +102,67 @@ infixl 9 .*., .*, *.
 ||| Addition of variables. This is an alias for
 ||| `var x + var y`.
 public export
-(.+.) :  {0 as : List a}
-      -> (x,y : a)
-      -> Elem x as
-      => Elem y as
-      => Expr a as
+(.+.) :
+     {0 as : List a}
+  -> (x,y : a)
+  -> {auto _ : Elem x as}
+  -> {auto _ : Elem y as}
+  -> Expr a as
 (.+.) x y = Plus (var x) (var y)
 
 ||| Addition of variables. This is an alias for
 ||| `x + var y`.
 public export
-(+.) :  {0 as : List a}
-     -> (x : Expr a as)
-     -> (y : a)
-     -> Elem y as
-     => Expr a as
+(+.) :
+     {0 as : List a}
+  -> (x : Expr a as)
+  -> (y : a)
+  -> {auto _ : Elem y as}
+  -> Expr a as
 (+.) x y = Plus x (var y)
 
 ||| Addition of variables. This is an alias for
 ||| `var x + y`.
 public export
-(.+) :  {0 as : List a}
-     -> (x : a)
-     -> (y : Expr a as)
-     -> Elem x as
-     => Expr a as
+(.+) :
+     {0 as : List a}
+  -> (x : a)
+  -> (y : Expr a as)
+  -> {auto _ : Elem x as}
+  -> Expr a as
 (.+) x y = Plus (var x) y
 
 ||| Multiplication of variables. This is an alias for
 ||| `var x * var y`.
 public export
-(.*.) :  {0 as : List a}
-      -> (x,y : a)
-      -> Elem x as
-      => Elem y as
-      => Expr a as
+(.*.) :
+     {0 as : List a}
+  -> (x,y : a)
+  -> {auto _ : Elem x as}
+  -> {auto _ : Elem y as}
+  -> Expr a as
 (.*.) x y = Mult (var x) (var y)
 
 ||| Multiplication of variables. This is an alias for
 ||| `var x * y`.
 public export
-(*.) :  {0 as : List a}
-     -> (x : Expr a as)
-     -> (y : a)
-     -> Elem y as
-     => Expr a as
+(*.) :
+     {0 as : List a}
+  -> (x : Expr a as)
+  -> (y : a)
+  -> {auto _ : Elem y as}
+  -> Expr a as
 (*.) x y = Mult x (var y)
 
 ||| Multiplication of variables. This is an alias for
 ||| `x * var y`.
 public export
-(.*) :  {0 as : List a}
-     -> (x : a)
-     -> (y : Expr a as)
-     -> Elem x as
-     => Expr a as
+(.*) :
+     {0 as : List a}
+  -> (x : a)
+  -> (y : Expr a as)
+  -> {auto _ : Elem x as}
+  -> Expr a as
 (.*) x y = Mult (var x) y
 
 --------------------------------------------------------------------------------
@@ -180,10 +186,11 @@ eval (Mult x y)  = eval x * eval y
 ||| Proof that addition of exponents is equivalent to multiplcation
 ||| of the two terms.
 export
-0 ppow :  Semiring a
-       => (m,n : Nat)
-       -> (x   : a)
-       -> pow x (m + n) === pow x m * pow x n
+0 ppow :
+     {auto _ : Semiring a}
+  -> (m,n : Nat)
+  -> (x   : a)
+  -> pow x (m + n) === pow x m * pow x n
 ppow 0     n x = sym multOneLeftNeutral
 ppow (S k) n x = Calc $
   |~ x * pow x (plus k n)

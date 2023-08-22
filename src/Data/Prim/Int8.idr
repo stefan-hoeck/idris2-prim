@@ -110,8 +110,9 @@ export
 GTE_MinInt8 m = case comp MinInt8 m of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Int8 smaller than \{show MinInt8}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Int8 smaller than \{show MinInt8}"
 
 ||| Not value of type `Int8` is less than zero.
 export
@@ -124,8 +125,9 @@ export
 LTE_MaxInt8 m = case comp m MaxInt8 of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Int8 greater than \{show MaxInt8}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Int8 greater than \{show MaxInt8}"
 
 ||| Not value of type `Int8` is greater than `MaxInt8`.
 export

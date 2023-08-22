@@ -15,17 +15,18 @@ import String
 import Hedgehog
 
 main : IO ()
-main = test
-  [ Char.props
-  , Bits8.props
-  , Bits16.props
-  , Bits32.props
-  , Bits64.props
-  , Int8.props
-  , Int16.props
-  , Int32.props
-  , Int64.props
-  , Int.props
-  , Integer.props
-  , String.props
-  ]
+main =
+  test
+    [ Char.props
+    , Bits8.props
+    , Bits16.props
+    , Bits32.props
+    , Bits64.props
+    , Int8.props
+    , Int16.props
+    , Int32.props
+    , Int64.props
+    , Int.props
+    , Integer.props
+    , String.props
+    ]

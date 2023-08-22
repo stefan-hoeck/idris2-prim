@@ -89,9 +89,10 @@ minusSelfZero =
 
 ||| Law of associativity for subtraction.
 export
-0 plusMinusAssociative :  Ring a
-                       => {k,m,n : a}
-                       -> k + (m - n) === (k + m) - n
+0 plusMinusAssociative :
+     {auto _ : Ring a}
+  -> {k,m,n : a}
+  -> k + (m - n) === (k + m) - n
 plusMinusAssociative =
   Calc $
     |~ k + (m - n)
@@ -101,10 +102,11 @@ plusMinusAssociative =
 
 ||| We can solve equations involving addition.
 export
-0 solvePlusRight :  Ring a
-               => {k,m,n : a}
-               -> k + m === n
-               -> k === n - m
+0 solvePlusRight :
+     {auto _ : Ring a}
+  -> {k,m,n : a}
+  -> k + m === n
+  -> k === n - m
 solvePlusRight prf =
   Calc $
     |~ k
@@ -115,10 +117,11 @@ solvePlusRight prf =
 
 ||| We can solve equations involving addition.
 export
-0 solvePlusLeft :  Ring a
-              => {k,m,n : a}
-              -> k + m === n
-              -> m === n - k
+0 solvePlusLeft :
+     {auto _ : Ring a}
+  -> {k,m,n : a}
+  -> k + m === n
+  -> m === n - k
 solvePlusLeft prf =
   solvePlusRight $ Calc $
     |~ m + k
@@ -150,20 +153,22 @@ plusRightInjective prf =
 ||| From `m + n === 0` follows that `n` is the
 ||| additive inverse of `m`.
 export
-0 solvePlusNegRight :  Ring a
-                    => {m,n : a}
-                    -> m + n === 0
-                    -> n === neg m
+0 solvePlusNegRight :
+     {auto _ : Ring a}
+  -> {m,n : a}
+  -> m + n === 0
+  -> n === neg m
 solvePlusNegRight prf =
   plusRightInjective (trans prf (sym plusNegRightZero))
 
 ||| From `m + n === 0` follows that `m` is the
 ||| additive inverse of `n`.
 export
-0 solvePlusNegLeft :  Ring a
-                   => {m,n : a}
-                   -> m + n === 0
-                   -> m === neg n
+0 solvePlusNegLeft :
+     {auto _ : Ring a}
+  -> {m,n : a}
+  -> m + n === 0
+  -> m === neg n
 solvePlusNegLeft prf =
   solvePlusNegRight $ Calc $
     |~ n + m
@@ -254,10 +259,11 @@ multZeroLeftAbsorbs =
 
 ||| Zero is an absorbing element of multiplication.
 export
-0 multZeroAbsorbs :  Ring a
-                  => {m,n : a}
-                  -> Either (m === 0) (n === 0)
-                  -> m * n === 0
+0 multZeroAbsorbs :
+     {auto _ : Ring a}
+  -> {m,n : a}
+  -> Either (m === 0) (n === 0)
+  -> m * n === 0
 multZeroAbsorbs (Left rfl) =
   Calc $
     |~ m * n
@@ -338,9 +344,10 @@ negMultNeg =
 
 ||| Multiplication is distributive with respect to addition.
 export
-0 rightDistributive :  Ring a
-                    => {k,m,n : a}
-                    -> (m + n) * k === m * k + n * k
+0 rightDistributive :
+     {auto _ : Ring a}
+  -> {k,m,n : a}
+  -> (m + n) * k === m * k + n * k
 rightDistributive =
   Calc $
     |~ (m + n) * k

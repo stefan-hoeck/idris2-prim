@@ -108,9 +108,10 @@ normalize e = normSum (norm e)
 
 -- Adding two sums via `add` preserves the evaluation result.
 -- Note: `assert_total` in here is a temporary fix for idris issue #2954
-0 padd :  SolvableRing a
-       => (x,y : Sum a as)
-       -> esum x + esum y === esum (add x y)
+0 padd :
+     {auto _ : SolvableRing a}
+  -> (x,y : Sum a as)
+  -> esum x + esum y === esum (add x y)
 padd []            xs = plusZeroLeftNeutral
 padd (x :: xs)     [] = plusZeroRightNeutral
 padd (T m x :: xs) (T n y :: ys) with (compProd x y) proof eq
@@ -139,10 +140,11 @@ padd (T m x :: xs) (T n y :: ys) with (compProd x y) proof eq
              ... cong ((m + n) * eprod x +) (padd xs ys)
 
 -- Small utility lemma
-0 psum0 :  SolvableRing a
-        => {x,y,z : a}
-        -> x === y
-        -> x === 0 * z + y
+0 psum0 :
+     {auto _ : SolvableRing a}
+  -> {x,y,z : a}
+  -> x === y
+  -> x === 0 * z + y
 psum0 prf = Calc $
   |~ x
   ~~ y          ... prf
@@ -150,11 +152,12 @@ psum0 prf = Calc $
   ~~ 0 * z + y  ..< cong (+ y) multZeroLeftAbsorbs
 
 -- Multiplying a sum with a term preserves the evaluation result.
-0 pmult1 :  SolvableRing a
-         => (m : a)
-         -> (p : Prod a as)
-         -> (s : Sum a as)
-         -> esum (mult1 (T m p) s) === (m * eprod p) * esum s
+0 pmult1 :
+     {auto _ : SolvableRing a}
+  -> (m : a)
+  -> (p : Prod a as)
+  -> (s : Sum a as)
+  -> esum (mult1 (T m p) s) === (m * eprod p) * esum s
 pmult1 m p []            = sym multZeroRightAbsorbs
 pmult1 m p (T n q :: xs) = Calc $
   |~ (m * n) * (eprod (mult p q)) + esum (mult1 (T m p) xs)
@@ -168,9 +171,10 @@ pmult1 m p (T n q :: xs) = Calc $
      ..< leftDistributive
 
 -- Multiplying two sums of terms preserves the evaluation result.
-0 pmult :  SolvableRing a
-        => (x,y : Sum a as)
-        -> esum x * esum y === esum (mult x y)
+0 pmult :
+     {auto _ : SolvableRing a}
+  -> (x,y : Sum a as)
+  -> esum x * esum y === esum (mult x y)
 pmult []            y = multZeroLeftAbsorbs
 pmult (T n x :: xs) y = Calc $
   |~ (n * eprod x + esum xs) * esum y
@@ -185,16 +189,18 @@ pmult (T n x :: xs) y = Calc $
 
 -- Evaluating a negated term is equivalent to negate the
 -- result of evaluating the term.
-0 pnegTerm :  SolvableRing a
-           => (x : Term a as)
-           -> eterm (negTerm x) === neg (eterm x)
+0 pnegTerm :
+     {auto _ : SolvableRing a}
+  -> (x : Term a as)
+  -> eterm (negTerm x) === neg (eterm x)
 pnegTerm (T f p) = multNegLeft
 
 -- Evaluating a negated sum of terms is equivalent to negate the
 -- result of evaluating the sum of terms.
-0 pneg :  SolvableRing a
-       => (x : Sum a as)
-       -> esum (negate x) === neg (esum x)
+0 pneg :
+     {auto _ : SolvableRing a}
+  -> (x : Sum a as)
+  -> esum (negate x) === neg (esum x)
 pneg []       = sym $ negZero
 pneg (x :: y) = Calc $
   |~ eterm (negTerm x) + esum (negate y)
@@ -204,9 +210,10 @@ pneg (x :: y) = Calc $
 
 -- Removing zero values from a sum of terms does not
 -- affect the evaluation result.
-0 pnormSum :  SolvableRing a
-           => (s : Sum a as)
-           -> esum (normSum s) === esum s
+0 pnormSum :
+     {auto _ : SolvableRing a}
+  -> (s : Sum a as)
+  -> esum (normSum s) === esum s
 pnormSum []           = Refl
 pnormSum (T f p :: y) with (isZero f)
   _ | Nothing   = Calc $
@@ -222,9 +229,10 @@ pnormSum (T f p :: y) with (isZero f)
 
 -- Evaluating an expression gives the same result as
 -- evaluating its normalized form.
-0 pnorm :  SolvableRing a
-        => (e : Expr a as)
-        -> eval e === esum (norm e)
+0 pnorm :
+     {auto _ : SolvableRing a}
+  -> (e : Expr a as)
+  -> eval e === esum (norm e)
 pnorm (Lit n)    = Calc $
   |~ n
   ~~ n * 1                    ..< multOneRightNeutral
@@ -275,9 +283,10 @@ pnorm (Minus x y) = Calc $
 
 -- Evaluating an expression gives the same result as
 -- evaluating its normalized form.
-0 pnormalize :  SolvableRing a
-             => (e : Expr a as)
-             -> eval e === esum (normalize e)
+0 pnormalize :
+     {auto _ : SolvableRing a}
+  -> (e : Expr a as)
+  -> eval e === esum (normalize e)
 pnormalize e = Calc $
   |~ eval e
   ~~ esum (norm e)           ... pnorm e
@@ -304,11 +313,12 @@ pnormalize e = Calc $
 |||                (x .*. x + 2 *. x *. y + y .*. y)
 ||| ```
 export
-0 solve :  SolvableRing a
-        => (as : List a)
-        -> (e1,e2 : Expr a as)
-        -> (prf : normalize e1 === normalize e2)
-        => eval e1 === eval e2
+0 solve :
+     {auto _ : SolvableRing a}
+  -> (as : List a)
+  -> (e1,e2 : Expr a as)
+  -> {auto prf : normalize e1 === normalize e2}
+  -> eval e1 === eval e2
 solve _ e1 e2 = Calc $
   |~ eval e1
   ~~ esum (normalize e1) ...(pnormalize e1)
@@ -320,14 +330,18 @@ solve _ e1 e2 = Calc $
 --------------------------------------------------------------------------------
 
 0 binom1 : {x,y : Bits8} -> (x + y) * (x + y) === x * x + 2 * x * y + y * y
-binom1 = solve [x,y]
-               ((x .+. y) * (x .+. y))
-               (x .*. x + 2 *. x *. y + y .*. y)
+binom1 =
+  solve
+    [x,y]
+    ((x .+. y) * (x .+. y))
+    (x .*. x + 2 *. x *. y + y .*. y)
 
 0 binom2 : {x,y : Bits8} -> (x - y) * (x - y) === x * x - 2 * x * y + y * y
-binom2 = solve [x,y]
-               ((x .-. y) * (x .-. y))
-               (x .*. x - 2 *. x *. y + y .*. y)
+binom2 =
+  solve
+    [x,y]
+    ((x .-. y) * (x .-. y))
+    (x .*. x - 2 *. x *. y + y .*. y)
 
 0 binom3 : {x,y : Bits8} -> (x + y) * (x - y) === x * x - y * y
 binom3 = solve [x,y] ((x .+. y) * (x .-. y)) (x .*. x - y .*. y)

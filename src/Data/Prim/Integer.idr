@@ -127,10 +127,11 @@ export
 oneAfterZero n gt0 = case comp 1 n of
   LT x _ _ => Left x
   EQ _ x _ => Right x
-  GT _ _ x => strictLT gt0
-            $ strictLT x
-            $ assert_total
-            $ idris_crash "IMPOSSIBLE: Integer between 0 and 1"
+  GT _ _ x =>
+      strictLT gt0
+    $ strictLT x
+    $ assert_total
+    $ idris_crash "IMPOSSIBLE: Integer between 0 and 1"
 
 ||| For positive `d`, `mod n d` is a non-negative number
 ||| strictly smaller than `d`.

@@ -110,8 +110,9 @@ export
 GTE_MinInt64 m = case comp MinInt64 m of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Int64 smaller than \{show MinInt64}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Int64 smaller than \{show MinInt64}"
 
 ||| Not value of type `Int64` is less than zero.
 export
@@ -124,8 +125,9 @@ export
 LTE_MaxInt64 m = case comp m MaxInt64 of
   LT x f g => %search
   EQ f x g => %search
-  GT f g x => assert_total
-            $ idris_crash "IMPOSSIBLE: Int64 greater than \{show MaxInt64}"
+  GT f g x =>
+    assert_total $
+    idris_crash "IMPOSSIBLE: Int64 greater than \{show MaxInt64}"
 
 ||| Not value of type `Int64` is greater than `MaxInt64`.
 export
