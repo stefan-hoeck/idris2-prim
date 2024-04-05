@@ -95,9 +95,9 @@ var x = Var x %search
 --          Syntax
 --------------------------------------------------------------------------------
 
-infixl 8 .+., .+, +.
+export infixl 8 .+., .+, +.
 
-infixl 9 .*., .*, *.
+export infixl 9 .*., .*, *.
 
 ||| Addition of variables. This is an alias for
 ||| `var x + var y`.
